@@ -497,12 +497,17 @@ async function bootApp() {
   // Render UI langsung pakai data lokal dulu (instan), config & dashboard nyusul di background
   document.getElementById('topUserName').textContent = STATE.user.nama;
   document.getElementById('topUserRole').textContent = STATE.user.role;
+  // [REV-7] Topbar avatar pakai foto user (bukan logo sekolah)
+  document.getElementById('topAvatar').src = STATE.user.fotoUrl || 'https://placehold.co/40x40?text=Avatar';
   renderMenu();
   updateOnlineChip();
   navigate('dashboard');
 
   await loadConfig();
-  document.getElementById('topAvatar').src = STATE.config.logoUrl || 'https://placehold.co/40x40';
+  // [REV-7] Setelah loadConfig, tetap pakai foto user untuk avatar (bukan logo)
+  if (!STATE.user.fotoUrl) {
+    document.getElementById('topAvatar').src = 'https://placehold.co/40x40?text=Avatar';
+  }
 
   if (navigator.onLine) syncAllTables();
 }
@@ -1872,12 +1877,21 @@ async function simpanProfil() {
   }
   if (res.success) {
     Object.assign(STATE.user, data);
-    if (res.fotoUrl) STATE.user.fotoUrl = res.fotoUrl;
+    // [REV-7] Update fotoUrl dari response backend (URL Google Drive thumbnail)
+    if (res.fotoUrl) {
+      STATE.user.fotoUrl = res.fotoUrl;
+      // Update preview foto di form profil
+      const previewEl = document.getElementById('profilFotoPreview');
+      if (previewEl) previewEl.src = res.fotoUrl;
+    }
     delete STATE.user.password;
     localStorage.setItem('sag_user', JSON.stringify(STATE.user));
     document.getElementById('topUserName').textContent = STATE.user.nama;
-    if (STATE.user.fotoUrl) document.getElementById('topAvatar').src = STATE.user.fotoUrl;
+    // [REV-7] Update topbar avatar dengan fotoUrl baru (atau placeholder)
+    document.getElementById('topAvatar').src = STATE.user.fotoUrl || 'https://placehold.co/40x40?text=Avatar';
     showToast('Profil berhasil diperbarui.', 'success');
+    // [REV-7] Sync ulang data Users supaya fotoUrl tersimpan di localStorage
+    if (navigator.onLine) syncTable('Users');
   }
 }
 
