@@ -106,18 +106,29 @@ body{
 .upload-drop:hover{ border-color:var(--accent); }
 .chip{ display:inline-block; padding:3px 10px; border-radius:20px; font-size:.72rem; font-weight:600;}
 
-/* ===== JADWAL KALENDER (SLOT) ===== */
-.cal-wrap{ overflow-x:auto; }
-.cal-grid{ display:grid; grid-template-columns: 90px repeat(6, minmax(150px,1fr)); gap:6px; min-width:900px; }
-.cal-head{ font-weight:700; font-size:.78rem; text-align:center; padding:8px 4px; color:var(--muted); text-transform:uppercase; letter-spacing:.05em;}
-.cal-time{ font-size:.72rem; color:var(--muted); padding:6px 4px; text-align:right; }
-.cal-cell{ background:rgba(255,255,255,.45); border:1px dashed rgba(0,0,0,.08); border-radius:10px; min-height:56px; padding:4px; position:relative; }
-.cal-cell.clickable{ cursor:pointer; }
-.cal-cell.clickable:hover{ border-color:var(--accent); background:rgba(58,90,255,.06); }
-.cal-slot{ background:linear-gradient(135deg, var(--accent), var(--accent-2)); color:#fff; border-radius:8px; padding:5px 7px; font-size:.72rem; margin-bottom:4px; line-height:1.3; position:relative; }
-.cal-slot .cal-slot-close{ position:absolute; top:2px; right:4px; cursor:pointer; opacity:.8; font-size:.65rem;}
-.cal-slot .cal-slot-close:hover{ opacity:1; }
-.cal-slot small{ display:block; opacity:.85; }
+/* ===== KALENDER JADWAL (Google Calendar style) ===== */
+.kal-toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.kal-toolbar .kal-filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
+.kal-wrap{overflow:auto;border-radius:14px;border:1px solid rgba(0,0,0,.06);background:rgba(255,255,255,.45);}
+.kal-grid{display:grid;grid-template-columns:64px repeat(6,minmax(120px,1fr));min-width:760px;position:relative;}
+.kal-cell{border-right:1px solid rgba(0,0,0,.05);border-bottom:1px solid rgba(0,0,0,.05);min-height:44px;position:relative;}
+.kal-head{position:sticky;top:0;z-index:5;background:rgba(255,255,255,.85);backdrop-filter:blur(8px);font-weight:700;font-size:.82rem;text-align:center;padding:8px 4px;border-bottom:2px solid rgba(58,90,255,.18);}
+.kal-head.today{color:var(--accent);}
+.kal-time{font-size:.68rem;color:var(--muted);text-align:right;padding:4px 6px 0 0;font-weight:600;position:sticky;left:0;background:rgba(255,255,255,.85);backdrop-filter:blur(4px);z-index:3;}
+.kal-slot{position:absolute;left:3px;right:3px;border-radius:8px;padding:5px 7px;font-size:.72rem;color:#fff;overflow:hidden;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.12);transition:transform .12s;line-height:1.25;}
+.kal-slot:hover{transform:scale(1.02);z-index:4;box-shadow:0 4px 14px rgba(0,0,0,.2);}
+.kal-slot .kal-slot-mapel{font-weight:700;font-size:.76rem;}
+.kal-slot .kal-slot-sub{opacity:.9;font-size:.66rem;}
+.kal-slot.readonly{cursor:default;}
+.kal-slot.readonly:hover{transform:none;box-shadow:0 2px 6px rgba(0,0,0,.12);}
+.kal-empty-hint{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:.6rem;color:var(--muted);opacity:0;transition:opacity .15s;}
+.kal-cell:hover .kal-empty-hint{opacity:.6;}
+.kal-legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px;font-size:.72rem;}
+.kal-legend span{display:inline-flex;align-items:center;gap:4px;}
+.kal-legend i{width:12px;height:12px;border-radius:3px;display:inline-block;}
+@media (max-width:575.98px){.kal-grid{min-width:680px;}.kal-cell{min-height:38px;}}
+.chip-toggle{cursor:pointer;}
+.mapel-pill{display:inline-block;padding:3px 9px;border-radius:14px;font-size:.7rem;font-weight:600;margin:2px;background:rgba(58,90,255,.12);color:var(--accent);}
 </style>
 </head>
 <body>
@@ -223,6 +234,41 @@ function dbUpsert(table, row) {
 function dbDelete(table, id) {
   dbSet(table, dbGet(table).filter(r => r.id !== id));
 }
+
+// Helper: ambil nama mapel dari array mapelIds
+function getStateMapelNama(mapelIds) {
+  if (!mapelIds) return [];
+  const ids = Array.isArray(mapelIds) ? mapelIds : String(mapelIds).split(',').map(s => s.trim()).filter(Boolean);
+  const mapelList = getData('Mapel');
+  return ids.map(id => {
+    const m = mapelList.find(x => x.id === id);
+    return m ? m.namaMapel : id;
+  }).filter(Boolean);
+}
+// Helper: ambil nama kelas dari kelasId
+function getKelasNama(kelasId) {
+  const k = getData('Kelas').find(x => x.id === kelasId);
+  return k ? k.namaKelas : (kelasId || '-');
+}
+// Helper: ambil nama mapel dari mapelId tunggal
+function getMapelNama(mapelId) {
+  const m = getData('Mapel').find(x => x.id === mapelId);
+  return m ? m.namaMapel : (mapelId || '-');
+}
+// Helper: ambil nama guru dari guruId
+function getGuruNama(guruId) {
+  const u = getData('Users').find(x => x.id === guruId);
+  return u ? u.nama : (guruId || '-');
+}
+// Helper: dapatkan warna mapel untuk kalender (hash sederhana)
+function getMapelColor(mapelId) {
+  const palette = ['#3a5aff','#7b3aff','#12b76a','#f79009','#f04438','#0891b2','#db2777','#9333ea','#0d9488','#ea580c','#4f46e5','#16a34a'];
+  if (!mapelId) return '#6b7385';
+  let hash = 0;
+  for (let i = 0; i < String(mapelId).length; i++) hash = String(mapelId).charCodeAt(i) + ((hash << 5) - hash);
+  return palette[Math.abs(hash) % palette.length];
+}
+
 
 // Ambil data: instan dari local, lalu refresh diam-diam dari server (kalau online)
 function getData(table, filterFn) {
@@ -386,7 +432,6 @@ const MENU_GURU = [
   { id: 'nilai', label: 'Input Penilaian', icon: 'fa-marker' },
   { id: 'jadwal', label: 'Jadwal Mengajar', icon: 'fa-calendar-days' },
   { id: 'agenda', label: 'Jurnal Agenda', icon: 'fa-book-open' },
-  { id: 'bimbingan', label: 'Bimbingan Wali', icon: 'fa-hands-holding-child' },
   { id: 'perangkat', label: 'E-Perangkat Ajar', icon: 'fa-file-arrow-up' },
   { id: 'panduan', label: 'Panduan Mengajar', icon: 'fa-book' },
 ];
@@ -395,8 +440,10 @@ const MENU_ADMIN = [
   { id: 'rekapWali', label: 'Rekap Guru Wali', icon: 'fa-people-roof' },
   { id: 'manajemenSiswa', label: 'Manajemen Data Siswa', icon: 'fa-user-graduate' },
   { id: 'manajemenGuru', label: 'Manajemen Data Guru', icon: 'fa-chalkboard-user' },
-  { id: 'userManagement', label: 'Manajemen User', icon: 'fa-users-gear' },
-  { id: 'importSiswa', label: 'Import Siswa Massal', icon: 'fa-file-import' },
+  { id: 'manajemenKelas', label: 'Manajemen Kelas', icon: 'fa-school' },
+  { id: 'manajemenMapel', label: 'Manajemen Mapel', icon: 'fa-book-open-reader' },
+  { id: 'manajemenJadwal', label: 'Manajemen Jadwal', icon: 'fa-calendar-week' },
+  { id: 'panduan', label: 'Panduan Pembelajaran', icon: 'fa-book' },
   { id: 'konfigurasi', label: 'Konfigurasi Sekolah', icon: 'fa-gear' },
   { id: 'monitoringPerangkat', label: 'Validasi & Monitoring', icon: 'fa-clipboard-list' },
 ];
@@ -408,7 +455,15 @@ const MENU_COMMON_BOTTOM = [
 function renderMenu() {
   const isAdmin = STATE.user.role === 'Admin';
   // Admin hanya melihat Menu Admin (tanpa Menu Guru), Guru hanya melihat Menu Guru
-  const items = MENU_COMMON_TOP.concat(isAdmin ? MENU_ADMIN : MENU_GURU, MENU_COMMON_BOTTOM);
+  let items = MENU_COMMON_TOP.concat(isAdmin ? MENU_ADMIN : [...MENU_GURU], MENU_COMMON_BOTTOM);
+
+  // Menu Bimbingan Wali hanya muncul untuk guru yang ditetapkan sebagai wali kelas oleh admin
+  if (!isAdmin && STATE.user.isWali) {
+    const idxPanduan = items.findIndex(i => i.id === 'panduan');
+    const bimbinganItem = { id: 'bimbingan', label: 'Bimbingan Wali', icon: 'fa-hands-holding-child' };
+    if (idxPanduan !== -1) items.splice(idxPanduan, 0, bimbinganItem);
+    else items.push(bimbinganItem);
+  }
 
   let html = '';
   items.forEach(item => {
@@ -428,18 +483,19 @@ const PAGE_TITLES = {
   dashboard: ['Dashboard', 'Ringkasan sistem administrasi'],
   absensi: ['Input Absensi', 'Catat kehadiran siswa per kelas'],
   nilai: ['Input Penilaian', 'Leger nilai dinamis & riwayat'],
-  jadwal: ['Jadwal Mengajar', 'Jadwal mengajar mingguan'],
+  jadwal: ['Jadwal Mengajar', 'Jadwal mengajar mingguan (kalender)'],
   agenda: ['Jurnal Agenda', 'Catatan kegiatan pembelajaran harian'],
-  bimbingan: ['Bimbingan Wali', 'Catatan bimbingan siswa'],
+  bimbingan: ['Bimbingan Wali', 'Catatan bimbingan siswa wali'],
   perangkat: ['E-Perangkat Ajar', 'Upload & kelola perangkat ajar'],
-  panduan: ['Panduan Mengajar', 'Repositori buku & regulasi'],
+  panduan: ['Panduan Mengajar', 'Repositori buku & regulasi pembelajaran'],
   rekapWali: ['Rekap Guru Wali', 'Rekapitulasi wali kelas'],
-  userManagement: ['Manajemen User', 'Tambah / hapus pengguna'],
-  importSiswa: ['Import Siswa Massal', 'Import data siswa via CSV'],
   konfigurasi: ['Konfigurasi Sekolah', 'Identitas & pengaturan sekolah'],
   monitoringPerangkat: ['Validasi & Monitoring', 'Supervisi kelengkapan administrasi guru'],
   manajemenSiswa: ['Manajemen Data Siswa', 'Kelola data induk siswa'],
-  manajemenGuru: ['Manajemen Data Guru', 'Kelola data induk guru'],
+  manajemenGuru: ['Manajemen Data Guru', 'Kelola data guru, mapel diampu, & wali kelas'],
+  manajemenKelas: ['Manajemen Kelas', 'Kelola data kelas & wali kelas'],
+  manajemenMapel: ['Manajemen Mapel', 'Kelola mata pelajaran'],
+  manajemenJadwal: ['Manajemen Jadwal', 'Atur jadwal pelajaran semua kelas'],
   profil: ['Profil Saya', 'Ubah foto profil, data diri, dan password'],
 };
 
@@ -454,18 +510,19 @@ async function navigate(page) {
     dashboard: renderDashboard,
     absensi: renderAbsensi,
     nilai: renderNilai,
-    jadwal: renderGenericTable.bind(null, 'JadwalMengajar', jadwalColumns()),
+    jadwal: () => renderKalenderJadwal(false),
     agenda: renderGenericTable.bind(null, 'Agenda', agendaColumns()),
     bimbingan: renderGenericTable.bind(null, 'BimbinganWali', bimbinganColumns()),
     perangkat: renderPerangkat,
     panduan: renderPanduan,
     rekapWali: renderRekapWali,
-    userManagement: renderUserManagement,
-    importSiswa: renderImportSiswa,
     konfigurasi: renderKonfigurasi,
     monitoringPerangkat: renderMonitoringPerangkat,
     manajemenSiswa: renderManajemenSiswa,
     manajemenGuru: renderManajemenGuru,
+    manajemenKelas: renderManajemenKelas,
+    manajemenMapel: renderManajemenMapel,
+    manajemenJadwal: () => renderKalenderJadwal(true),
     profil: renderProfil,
   };
   document.getElementById('pageContent').innerHTML = '<div class="text-center py-5 section-sub">Memuat...</div>';
@@ -524,8 +581,9 @@ async function renderDashboardAdmin() {
 async function renderDashboardGuru() {
   const perangkat = getData('PerangkatAjar', p => p.guruId === STATE.user.id);
   const jadwal = getData('JadwalMengajar', j => j.guruId === STATE.user.id);
-  const bimbingan = getData('BimbinganWali', b => b.guruId === STATE.user.id);
   const agenda = getData('Agenda', a => a.guruId === STATE.user.id);
+  const isWali = !!STATE.user.isWali;
+  const bimbingan = isWali ? getData('BimbinganWali', b => b.guruId === STATE.user.id) : [];
 
   const jenisWajib = ['Silabus', 'ATP', 'Prota', 'Promes', 'Modul Ajar/RPP', 'KKTP'];
   const jenisTerisi = jenisWajib.filter(j => perangkat.some(p => p.jenis === j && p.status !== 'Ditolak'));
@@ -536,13 +594,24 @@ async function renderDashboardGuru() {
     .map(a => `<div class="mb-2 small border-bottom pb-2"><span class="fw-semibold">${a.tanggal || '-'}</span> · ${a.kelasId || '-'} — ${a.materi || 'Tanpa materi'}</div>`).join('')
     || '<p class="section-sub small mb-0">Belum ada agenda tercatat.</p>';
 
+  const bimbinganCard = isWali
+    ? statCard('Bimbingan Wali', bimbingan.length, 'fa-hands-holding-child', 'linear-gradient(135deg,#f79009,#f04438)')
+    : statCard('Status Wali', 'Bukan Wali', 'fa-user-tag', 'linear-gradient(135deg,#94a3b8,#64748b)');
+
+  // Info mapel yang diampu guru
+  const mapelList = getStateMapelNama(STATE.user.mapelIds);
+
   document.getElementById('pageContent').innerHTML = `
     <div class="row g-3 mb-3">
       ${statCard('Kelas Diampu', kelasDiampu.length, 'fa-chalkboard', 'linear-gradient(135deg,#3a5aff,#7b3aff)')}
       ${statCard('Jadwal Mengajar', jadwal.length, 'fa-calendar-days', 'linear-gradient(135deg,#12b76a,#0891b2)')}
-      ${statCard('Bimbingan Wali', bimbingan.length, 'fa-hands-holding-child', 'linear-gradient(135deg,#f79009,#f04438)')}
+      ${bimbinganCard}
       ${statCard('Kelengkapan Perangkat', persentase + '%', 'fa-clipboard-check', 'linear-gradient(135deg,#7b3aff,#f04438)')}
     </div>
+    ${mapelList ? `<div class="glass card-section mb-3">
+      <div class="section-title mb-2"><i class="fa-solid fa-book-open-reader me-1"></i> Mapel yang Diampu</div>
+      <div>${mapelList.map(m => `<span class="mapel-pill">${m}</span>`).join('') || '<span class="section-sub small">Belum ada mapel ditetapkan.</span>'}</div>
+    </div>` : ''}
     <div class="glass card-section">
       <div class="section-title mb-3"><i class="fa-solid fa-clipboard-check me-1"></i> Kelengkapan Perangkat Ajar Saya</div>
       <div class="progress mb-2"><div class="progress-bar" style="width:${persentase}%; background:${persentase>=80?'var(--success)':persentase>=50?'var(--warn)':'var(--danger)'}"></div></div>
@@ -599,8 +668,12 @@ async function writeData(action, table, data, id) {
 }
 
 /*************************************************************
- * GENERIC TABLE RENDERER (untuk Agenda, Bimbingan, dll)
+ * GENERIC TABLE RENDERER (untuk Jadwal, Agenda, Bimbingan, dll)
  *************************************************************/
+function jadwalColumns(){ return [
+  {key:'hari', label:'Hari'}, {key:'jamKe', label:'Jam Ke'}, {key:'jamMulai', label:'Mulai'},
+  {key:'jamSelesai', label:'Selesai'}, {key:'kelasId', label:'Kelas'}, {key:'mapelId', label:'Mapel'}
+];}
 function agendaColumns(){ return [
   {key:'tanggal', label:'Tanggal'}, {key:'kelasId', label:'Kelas'}, {key:'mapelId', label:'Mapel'},
   {key:'jamKe', label:'Jam Ke'}, {key:'materi', label:'Materi'}, {key:'kegiatan', label:'Kegiatan'}
@@ -661,7 +734,10 @@ function openForm(table, columns, existing) {
 async function submitForm(table, columns, id) {
   const data = {};
   if (id) data.id = id;
-  if (STATE.user.role === 'Guru' && columns.some(c => c.key === 'guruId')) data.guruId = STATE.user.id;
+  // Untuk tabel yang punya konsep guruId (Agenda, BimbinganWali, dll), set otomatis untuk guru
+  if (STATE.user.role === 'Guru' && ['Agenda','BimbinganWali','JadwalMengajar','PerangkatAjar'].includes(table)) {
+    data.guruId = STATE.user.id;
+  }
   columns.forEach(c => data[c.key] = document.getElementById('f_' + c.key).value);
 
   bootstrap.Modal.getInstance(document.getElementById('dynModal')).hide();
@@ -911,7 +987,7 @@ function fileToBase64(file) {
 }
 
 /*************************************************************
- * PANDUAN MENGAJAR (REPOSITORI) - Guru & Admin bisa lihat, Admin bisa tambah
+ * PANDUAN MENGAJAR (REPOSITORI)
  *************************************************************/
 async function renderPanduan() {
   const rows = getData('PanduanMengajar');
@@ -921,7 +997,6 @@ async function renderPanduan() {
       <div class="fw-semibold mb-1"><i class="fa-solid ${r.tipe==='Link'?'fa-link':'fa-file-pdf'} me-1"></i>${r.judul}</div>
       <div class="section-sub small mb-2">${r.kategori} • ${r.deskripsi||''}</div>
       <a href="${r.fileUrl || r.linkUrl}" target="_blank" class="btn btn-soft btn-sm w-100">Buka</a>
-      ${isAdmin ? `<button class="btn btn-sm btn-soft text-danger w-100 mt-1" onclick="deleteRow('PanduanMengajar','${r.id}')"><i class="fa-solid fa-trash me-1"></i>Hapus</button>` : ''}
     </div></div>`).join('') || '<p class="section-sub">Belum ada dokumen panduan.</p>';
 
   document.getElementById('pageContent').innerHTML = `
@@ -1058,22 +1133,30 @@ async function submitFormSiswa(id) {
 
 /*************************************************************
  * ADMIN: MANAJEMEN DATA GURU
- * (termasuk penetapan Wali Kelas: hanya guru yang ditunjuk admin
- * yang mendapat menu "Bimbingan Wali" pada akun mereka)
  *************************************************************/
 async function renderManajemenGuru() {
   const rows = getData('Users', u => u.role === 'Guru');
   const kelasList = getData('Kelas');
-  const kelasNama = id => (kelasList.find(k => k.id === id) || {}).namaKelas || '-';
-  const tbody = rows.map(g => `<tr>
-    <td>${g.nama || '-'}</td><td>${g.nip || '-'}</td><td>${g.username || '-'}</td><td>${g.noHp || '-'}</td>
-    <td>${g.waliKelasId ? `<span class="chip" style="background:#3a5aff20; color:var(--accent)"><i class="fa-solid fa-people-roof me-1"></i>${kelasNama(g.waliKelasId)}</span>` : '<span class="section-sub small">Bukan wali</span>'}</td>
+  const tbody = rows.map(g => {
+    const mapelNamaList = getStateMapelNama(g.mapelIds);
+    const waliKelasNama = g.isWali ? getKelasNama(g.waliKelasId) : '';
+    const waliChip = g.isWali
+      ? `<span class="chip" style="background:#7b3aff20;color:#7b3aff"><i class="fa-solid fa-hands-holding-child me-1"></i>Wali ${waliKelasNama}</span>`
+      : `<span class="chip bg-secondary-subtle text-secondary">Bukan Wali</span>`;
+    const mapelCell = mapelNamaList.length
+      ? mapelNamaList.map(m => `<span class="mapel-pill">${m}</span>`).join(' ')
+      : '<span class="section-sub small">-</span>';
+    return `<tr>
+    <td>${g.nama || '-'}</td><td>${g.nip || '-'}</td><td>${g.username || '-'}</td>
+    <td>${mapelCell}</td>
+    <td>${waliChip}</td>
     <td><span class="chip" style="background:${g.status==='Aktif'?'#12b76a20':'#f0443820'}; color:${g.status==='Aktif'?'#12b76a':'#f04438'}">${g.status || 'Aktif'}</span></td>
     <td class="text-end">
       <button class="btn btn-sm btn-soft" onclick='openFormGuru(${JSON.stringify(g).replace(/'/g,"&#39;")})'><i class="fa-solid fa-pen"></i></button>
       <button class="btn btn-sm btn-soft" onclick="resetPasswordUser('${g.id}')"><i class="fa-solid fa-key"></i></button>
       <button class="btn btn-sm btn-soft text-danger" onclick="deleteRow('Users','${g.id}')"><i class="fa-solid fa-trash"></i></button>
-    </td></tr>`).join('') || `<tr><td colspan="7" class="text-center section-sub py-4">Belum ada data guru.</td></tr>`;
+    </td></tr>`;
+  }).join('') || `<tr><td colspan="7" class="text-center section-sub py-4">Belum ada data guru.</td></tr>`;
 
   document.getElementById('pageContent').innerHTML = `
     <div class="glass card-section">
@@ -1082,7 +1165,7 @@ async function renderManajemenGuru() {
         <button class="btn btn-accent btn-sm" onclick="openFormGuru(null)"><i class="fa-solid fa-user-plus me-1"></i>Tambah Guru</button>
       </div>
       <div class="table-responsive"><table class="table table-sm align-middle">
-        <thead><tr><th>Nama</th><th>NIP</th><th>Username</th><th>No HP</th><th>Wali Kelas</th><th>Status</th><th></th></tr></thead>
+        <thead><tr><th>Nama</th><th>NIP</th><th>Username</th><th>Mapel Diampu</th><th>Status Wali</th><th>Status</th><th></th></tr></thead>
         <tbody>${tbody}</tbody>
       </table></div>
     </div>`;
@@ -1091,30 +1174,71 @@ async function renderManajemenGuru() {
 
 function openFormGuru(existing) {
   const isEdit = !!existing;
+  const mapelList = getData('Mapel');
   const kelasList = window._kelasListForGuru || getData('Kelas');
-  const kelasOptions = '<option value="">Bukan Wali Kelas</option>' + kelasList.map(k =>
-    `<option value="${k.id}" ${isEdit && existing.waliKelasId === k.id ? 'selected' : ''}>${k.namaKelas}</option>`).join('');
-  const modalHtml = `<div class="modal fade" id="guruModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content glass">
+  const selectedMapelIds = isEdit && existing.mapelIds
+    ? (Array.isArray(existing.mapelIds) ? existing.mapelIds : String(existing.mapelIds).split(',').map(s=>s.trim()).filter(Boolean))
+    : [];
+  const isWali = isEdit && existing.isWali;
+  const waliKelasId = isEdit ? (existing.waliKelasId || '') : '';
+
+  const mapelCheckboxes = mapelList.length
+    ? mapelList.map(m => `
+      <div class="form-check">
+        <input class="form-check-input" type="checkbox" value="${m.id}" id="mp_${m.id}" ${selectedMapelIds.includes(m.id) ? 'checked' : ''}>
+        <label class="form-check-label small" for="mp_${m.id}">${m.namaMapel}${m.kodeMapel ? ' (' + m.kodeMapel + ')' : ''}</label>
+      </div>`).join('')
+    : '<p class="section-sub small">Belum ada mapel. Tambahkan mapel di menu Manajemen Mapel.</p>';
+
+  const modalHtml = `<div class="modal fade" id="guruModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content glass">
     <div class="modal-header"><h6 class="modal-title">${isEdit ? 'Edit' : 'Tambah'} Data Guru</h6><button class="btn-close" data-bs-dismiss="modal"></button></div>
     <div class="modal-body">
-      <label class="form-label small fw-semibold">Nama Lengkap</label>
-      <input class="form-control form-control-sm mb-2" id="guNama" value="${isEdit ? (existing.nama||'') : ''}">
-      <label class="form-label small fw-semibold">NIP</label>
-      <input class="form-control form-control-sm mb-2" id="guNip" value="${isEdit ? (existing.nip||'') : ''}">
-      <label class="form-label small fw-semibold">No HP</label>
-      <input class="form-control form-control-sm mb-2" id="guNoHp" value="${isEdit ? (existing.noHp||'') : ''}">
-      <label class="form-label small fw-semibold">Username</label>
-      <input class="form-control form-control-sm mb-2" id="guUsername" value="${isEdit ? (existing.username||'') : ''}" ${isEdit ? 'disabled' : ''}>
-      ${!isEdit ? `<label class="form-label small fw-semibold">Password</label>
-      <input type="password" class="form-control form-control-sm mb-2" id="guPassword">` : ''}
-      <label class="form-label small fw-semibold">Wali Kelas</label>
-      <select class="form-select form-select-sm mb-2" id="guWaliKelas">${kelasOptions}</select>
-      <div class="section-sub small mb-2">Hanya guru yang ditunjuk sebagai wali kelas yang akan memiliki menu "Bimbingan Wali".</div>
-      <label class="form-label small fw-semibold">Status</label>
-      <select class="form-select form-select-sm" id="guStatus">
-        <option value="Aktif" ${isEdit && existing.status==='Aktif'?'selected':''}>Aktif</option>
-        <option value="Nonaktif" ${isEdit && existing.status==='Nonaktif'?'selected':''}>Nonaktif</option>
-      </select>
+      <div class="row g-2">
+        <div class="col-md-6">
+          <label class="form-label small fw-semibold">Nama Lengkap</label>
+          <input class="form-control form-control-sm mb-2" id="guNama" value="${isEdit ? (existing.nama||'') : ''}">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label small fw-semibold">NIP</label>
+          <input class="form-control form-control-sm mb-2" id="guNip" value="${isEdit ? (existing.nip||'') : ''}">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label small fw-semibold">No HP</label>
+          <input class="form-control form-control-sm mb-2" id="guNoHp" value="${isEdit ? (existing.noHp||'') : ''}">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label small fw-semibold">Username</label>
+          <input class="form-control form-control-sm mb-2" id="guUsername" value="${isEdit ? (existing.username||'') : ''}" ${isEdit ? 'disabled' : ''}>
+        </div>
+        ${!isEdit ? `<div class="col-md-6">
+          <label class="form-label small fw-semibold">Password</label>
+          <input type="password" class="form-control form-control-sm mb-2" id="guPassword">
+        </div>` : ''}
+        <div class="col-md-6">
+          <label class="form-label small fw-semibold">Status</label>
+          <select class="form-select form-select-sm" id="guStatus">
+            <option value="Aktif" ${isEdit && existing.status==='Aktif'?'selected':''}>Aktif</option>
+            <option value="Nonaktif" ${isEdit && existing.status==='Nonaktif'?'selected':''}>Nonaktif</option>
+          </select>
+        </div>
+      </div>
+      <hr class="my-3">
+      <label class="form-label small fw-semibold"><i class="fa-solid fa-book-open-reader me-1"></i>Mapel yang Diampu <span class="section-sub fw-normal">(pilih satu atau lebih - guru bisa mengajar banyak mapel)</span></label>
+      <div class="border rounded p-2 mb-3" style="max-height:160px;overflow:auto;background:rgba(255,255,255,.4);">
+        ${mapelCheckboxes}
+      </div>
+      <div class="form-check form-switch mb-2">
+        <input class="form-check-input" type="checkbox" id="guIsWali" ${isWali ? 'checked' : ''} onchange="toggleWaliKelas()">
+        <label class="form-check-label small fw-semibold" for="guIsWali"><i class="fa-solid fa-hands-holding-child me-1"></i>Tetapkan sebagai Guru Wali Kelas</label>
+      </div>
+      <div id="waliKelasWrap" style="${isWali ? '' : 'display:none;'}">
+        <label class="form-label small fw-semibold">Wali Kelas untuk</label>
+        <select class="form-select form-select-sm" id="guWaliKelas">
+          <option value="">- Pilih Kelas -</option>
+          ${kelasList.map(k => `<option value="${k.id}" ${waliKelasId===k.id?'selected':''}>${k.namaKelas}</option>`).join('')}
+        </select>
+        <p class="section-sub small mt-1"><i class="fa-solid fa-circle-info me-1"></i>Hanya guru yang ditetapkan wali yang dapat mengakses menu Bimbingan Wali.</p>
+      </div>
     </div>
     <div class="modal-footer"><button class="btn btn-accent btn-sm" onclick='submitFormGuru(${isEdit ? `"${existing.id}"` : 'null'})'>Simpan</button></div>
   </div></div></div>`;
@@ -1123,248 +1247,47 @@ function openFormGuru(existing) {
   document.body.appendChild(holder);
   new bootstrap.Modal(document.getElementById('guruModal')).show();
 }
+function toggleWaliKelas() {
+  const checked = document.getElementById('guIsWali').checked;
+  document.getElementById('waliKelasWrap').style.display = checked ? '' : 'none';
+  if (!checked) document.getElementById('guWaliKelas').value = '';
+}
 async function submitFormGuru(id) {
   bootstrap.Modal.getInstance(document.getElementById('guruModal')).hide();
-  const waliKelasId = document.getElementById('guWaliKelas').value;
+  // Kumpulkan mapelIds dari checkbox yang dicentang
+  const mapelIds = Array.from(document.querySelectorAll('input[id^="mp_"]:checked')).map(cb => cb.value);
+  const isWali = document.getElementById('guIsWali').checked;
+  const waliKelasId = isWali ? document.getElementById('guWaliKelas').value : '';
+
+  if (isWali && !waliKelasId) {
+    showToast('Pilih kelas untuk wali kelas, atau matikan status wali.', 'warning');
+    return;
+  }
+
   if (id) {
     const data = { id, nama: document.getElementById('guNama').value, nip: document.getElementById('guNip').value,
-      noHp: document.getElementById('guNoHp').value, waliKelasId, status: document.getElementById('guStatus').value };
+      noHp: document.getElementById('guNoHp').value, status: document.getElementById('guStatus').value,
+      mapelIds, isWali, waliKelasId };
     await writeData('update', 'Users', data, id);
+    // Jika yang diedit adalah user yg sedang login, update STATE juga
+    if (STATE.user.id === id) {
+      STATE.user.isWali = isWali;
+      STATE.user.mapelIds = mapelIds;
+      STATE.user.waliKelasId = waliKelasId;
+      localStorage.setItem('sag_user', JSON.stringify(STATE.user));
+      renderMenu();
+    }
     showToast('Data guru tersimpan.', 'success');
   } else {
     const data = { nama: document.getElementById('guNama').value, nip: document.getElementById('guNip').value,
       noHp: document.getElementById('guNoHp').value, username: document.getElementById('guUsername').value,
-      password: document.getElementById('guPassword').value, role: 'Guru', waliKelasId, status: document.getElementById('guStatus').value };
+      password: document.getElementById('guPassword').value, role: 'Guru', status: document.getElementById('guStatus').value,
+      mapelIds, isWali, waliKelasId };
     const res = await apiCall('manageUser', { sub: 'add', data });
     if (!res.success) return;
     showToast('Guru ditambahkan.', 'success');
   }
   renderManajemenGuru();
-}
-
-/*************************************************************
- * ADMIN: MANAJEMEN KELAS
- *************************************************************/
-async function renderManajemenKelas() {
-  const rows = getData('Kelas');
-  const guruList = getData('Users', u => u.role === 'Guru');
-  const waliNama = id => (guruList.find(g => g.waliKelasId === id) || {}).nama || '-';
-
-  const tbody = rows.map(k => `<tr>
-    <td>${k.namaKelas || '-'}</td><td>${k.tingkat || '-'}</td><td>${waliNama(k.id)}</td>
-    <td class="text-end">
-      <button class="btn btn-sm btn-soft" onclick='openFormKelas(${JSON.stringify(k).replace(/'/g,"&#39;")})'><i class="fa-solid fa-pen"></i></button>
-      <button class="btn btn-sm btn-soft text-danger" onclick="deleteRow('Kelas','${k.id}')"><i class="fa-solid fa-trash"></i></button>
-    </td></tr>`).join('') || `<tr><td colspan="4" class="text-center section-sub py-4">Belum ada data kelas.</td></tr>`;
-
-  document.getElementById('pageContent').innerHTML = `
-    <div class="glass card-section">
-      <div class="d-flex justify-content-between align-items-center mb-3">
-        <div class="section-title">Data Kelas / Rombel</div>
-        <button class="btn btn-accent btn-sm" onclick="openFormKelas(null)"><i class="fa-solid fa-plus me-1"></i>Tambah Kelas</button>
-      </div>
-      <div class="section-sub small mb-2">Wali kelas ditentukan dari menu Manajemen Data Guru.</div>
-      <div class="table-responsive"><table class="table table-sm align-middle">
-        <thead><tr><th>Nama Kelas</th><th>Tingkat</th><th>Wali Kelas</th><th></th></tr></thead>
-        <tbody>${tbody}</tbody>
-      </table></div>
-    </div>`;
-}
-function openFormKelas(existing) {
-  const isEdit = !!existing;
-  const modalHtml = `<div class="modal fade" id="kelasModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content glass">
-    <div class="modal-header"><h6 class="modal-title">${isEdit ? 'Edit' : 'Tambah'} Kelas</h6><button class="btn-close" data-bs-dismiss="modal"></button></div>
-    <div class="modal-body">
-      <label class="form-label small fw-semibold">Nama Kelas</label>
-      <input class="form-control form-control-sm mb-2" id="klNama" value="${isEdit ? (existing.namaKelas||'') : ''}" placeholder="Contoh: VII A">
-      <label class="form-label small fw-semibold">Tingkat</label>
-      <input class="form-control form-control-sm mb-2" id="klTingkat" value="${isEdit ? (existing.tingkat||'') : ''}" placeholder="Contoh: VII / MTs">
-    </div>
-    <div class="modal-footer"><button class="btn btn-accent btn-sm" onclick='submitFormKelas(${isEdit ? `"${existing.id}"` : 'null'})'>Simpan</button></div>
-  </div></div></div>`;
-  document.getElementById('kelasModalHolder')?.remove();
-  const holder = document.createElement('div'); holder.id = 'kelasModalHolder'; holder.innerHTML = modalHtml;
-  document.body.appendChild(holder);
-  new bootstrap.Modal(document.getElementById('kelasModal')).show();
-}
-async function submitFormKelas(id) {
-  const data = { namaKelas: document.getElementById('klNama').value, tingkat: document.getElementById('klTingkat').value };
-  if (id) data.id = id;
-  bootstrap.Modal.getInstance(document.getElementById('kelasModal')).hide();
-  await writeData(id ? 'update' : 'create', 'Kelas', data, id);
-  showToast('Data kelas tersimpan.', 'success');
-  renderManajemenKelas();
-}
-
-/*************************************************************
- * ADMIN: MANAJEMEN MAPEL
- *************************************************************/
-async function renderManajemenMapel() {
-  const rows = getData('Mapel');
-  const tbody = rows.map(m => `<tr>
-    <td>${m.kodeMapel || '-'}</td><td>${m.namaMapel || '-'}</td>
-    <td class="text-end">
-      <button class="btn btn-sm btn-soft" onclick='openFormMapel(${JSON.stringify(m).replace(/'/g,"&#39;")})'><i class="fa-solid fa-pen"></i></button>
-      <button class="btn btn-sm btn-soft text-danger" onclick="deleteRow('Mapel','${m.id}')"><i class="fa-solid fa-trash"></i></button>
-    </td></tr>`).join('') || `<tr><td colspan="3" class="text-center section-sub py-4">Belum ada data mapel.</td></tr>`;
-
-  document.getElementById('pageContent').innerHTML = `
-    <div class="glass card-section">
-      <div class="d-flex justify-content-between align-items-center mb-3">
-        <div class="section-title">Data Mata Pelajaran</div>
-        <button class="btn btn-accent btn-sm" onclick="openFormMapel(null)"><i class="fa-solid fa-plus me-1"></i>Tambah Mapel</button>
-      </div>
-      <div class="table-responsive"><table class="table table-sm align-middle">
-        <thead><tr><th>Kode</th><th>Nama Mapel</th><th></th></tr></thead>
-        <tbody>${tbody}</tbody>
-      </table></div>
-    </div>`;
-}
-function openFormMapel(existing) {
-  const isEdit = !!existing;
-  const modalHtml = `<div class="modal fade" id="mapelModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content glass">
-    <div class="modal-header"><h6 class="modal-title">${isEdit ? 'Edit' : 'Tambah'} Mapel</h6><button class="btn-close" data-bs-dismiss="modal"></button></div>
-    <div class="modal-body">
-      <label class="form-label small fw-semibold">Kode Mapel</label>
-      <input class="form-control form-control-sm mb-2" id="mpKode" value="${isEdit ? (existing.kodeMapel||'') : ''}">
-      <label class="form-label small fw-semibold">Nama Mapel</label>
-      <input class="form-control form-control-sm mb-2" id="mpNama" value="${isEdit ? (existing.namaMapel||'') : ''}">
-    </div>
-    <div class="modal-footer"><button class="btn btn-accent btn-sm" onclick='submitFormMapel(${isEdit ? `"${existing.id}"` : 'null'})'>Simpan</button></div>
-  </div></div></div>`;
-  document.getElementById('mapelModalHolder')?.remove();
-  const holder = document.createElement('div'); holder.id = 'mapelModalHolder'; holder.innerHTML = modalHtml;
-  document.body.appendChild(holder);
-  new bootstrap.Modal(document.getElementById('mapelModal')).show();
-}
-async function submitFormMapel(id) {
-  const data = { kodeMapel: document.getElementById('mpKode').value, namaMapel: document.getElementById('mpNama').value };
-  if (id) data.id = id;
-  bootstrap.Modal.getInstance(document.getElementById('mapelModal')).hide();
-  await writeData(id ? 'update' : 'create', 'Mapel', data, id);
-  showToast('Data mapel tersimpan.', 'success');
-  renderManajemenMapel();
-}
-
-/*************************************************************
- * JADWAL PELAJARAN - TAMPILAN KALENDER SLOT MINGGUAN
- * Admin: melihat semua jadwal & bisa tambah/edit/hapus slot.
- * Guru : hanya melihat jadwal miliknya sendiri, tidak bisa edit.
- * Satu guru bisa mengajar lebih dari satu mapel (slot berbeda-beda).
- *************************************************************/
-const HARI_LIST = ['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
-const JAM_SLOTS = [
-  ['07:00','07:40'], ['07:40','08:20'], ['08:20','09:00'], ['09:00','09:40'],
-  ['09:55','10:35'], ['10:35','11:15'], ['11:15','11:55'],
-  ['13:00','13:40'], ['13:40','14:20'], ['14:20','15:00']
-];
-
-async function renderJadwalPelajaran() {
-  const isAdmin = STATE.user.role === 'Admin';
-  const kelasList = getData('Kelas');
-  const guruList = getData('Users', u => u.role === 'Guru');
-  const mapelList = getData('Mapel');
-  const allJadwal = getData('JadwalMengajar', isAdmin ? null : (j => j.guruId === STATE.user.id));
-
-  window._jadwalCtx = { kelasList, guruList, mapelList };
-
-  const kelasFilterOptions = '<option value="">Semua Kelas</option>' + kelasList.map(k => `<option value="${k.id}">${k.namaKelas}</option>`).join('');
-
-  document.getElementById('pageContent').innerHTML = `
-    <div class="glass card-section">
-      <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-        <div>
-          <div class="section-title">${isAdmin ? 'Jadwal Pelajaran (Semua Kelas)' : 'Jadwal Mengajar Saya'}</div>
-          <div class="section-sub small">${isAdmin ? 'Klik slot kosong untuk menambah, klik slot terisi untuk mengedit/menghapus.' : 'Tampilan jadwal mengajar Anda, hanya dapat dilihat.'}</div>
-        </div>
-        ${isAdmin ? `<select class="form-select form-select-sm" style="max-width:220px" id="jdwFilterKelas" onchange="renderKalenderJadwal()">${kelasFilterOptions}</select>` : ''}
-      </div>
-      <div class="cal-wrap"><div id="kalenderJadwalHolder"></div></div>
-    </div>`;
-
-  window._jadwalDataAll = allJadwal;
-  renderKalenderJadwal();
-}
-
-function renderKalenderJadwal() {
-  const isAdmin = STATE.user.role === 'Admin';
-  const { kelasList, guruList, mapelList } = window._jadwalCtx;
-  const filterKelas = isAdmin ? (document.getElementById('jdwFilterKelas')?.value || '') : '';
-  const rows = window._jadwalDataAll.filter(j => !filterKelas || j.kelasId === filterKelas);
-
-  const kelasNama = id => (kelasList.find(k => k.id === id) || {}).namaKelas || '-';
-  const guruNama = id => (guruList.find(g => g.id === id) || {}).nama || '-';
-  const mapelNama = id => (mapelList.find(m => m.id === id) || {}).namaMapel || '-';
-
-  let grid = `<div class="cal-grid"><div class="cal-head">Jam</div>${HARI_LIST.map(h => `<div class="cal-head">${h}</div>`).join('')}`;
-
-  JAM_SLOTS.forEach(([mulai, selesai]) => {
-    grid += `<div class="cal-time">${mulai}<br>${selesai}</div>`;
-    HARI_LIST.forEach(hari => {
-      const slots = rows.filter(j => j.hari === hari && j.jamMulai === mulai);
-      const slotHtml = slots.map(j => `<div class="cal-slot" ${isAdmin ? `onclick='openFormJadwal(${JSON.stringify(j).replace(/'/g,"&#39;")})'` : ''} style="${isAdmin?'cursor:pointer;':''}">
-          <strong>${mapelNama(j.mapelId)}</strong>
-          <small>${kelasNama(j.kelasId)} • ${guruNama(j.guruId)}</small>
-        </div>`).join('');
-      grid += `<div class="cal-cell ${isAdmin ? 'clickable' : ''}" ${isAdmin ? `onclick='if(event.target===this) openFormJadwal(null, "${hari}", "${mulai}", "${selesai}")'` : ''}>${slotHtml}</div>`;
-    });
-  });
-  grid += `</div>`;
-  document.getElementById('kalenderJadwalHolder').innerHTML = grid;
-}
-
-function openFormJadwal(existing, hari, jamMulai, jamSelesai) {
-  const isEdit = !!existing;
-  const { kelasList, guruList, mapelList } = window._jadwalCtx;
-  const hariOptions = HARI_LIST.map(h => `<option value="${h}" ${(isEdit ? existing.hari : hari) === h ? 'selected' : ''}>${h}</option>`).join('');
-  const jamOptions = JAM_SLOTS.map(([m,s]) => `<option value="${m}|${s}" ${(isEdit ? existing.jamMulai : jamMulai) === m ? 'selected' : ''}>${m} - ${s}</option>`).join('');
-  const kelasOptions = kelasList.map(k => `<option value="${k.id}" ${isEdit && existing.kelasId===k.id?'selected':''}>${k.namaKelas}</option>`).join('');
-  const guruOptions = guruList.map(g => `<option value="${g.id}" ${isEdit && existing.guruId===g.id?'selected':''}>${g.nama}</option>`).join('');
-  const mapelOptions = mapelList.map(m => `<option value="${m.id}" ${isEdit && existing.mapelId===m.id?'selected':''}>${m.namaMapel}</option>`).join('');
-
-  const modalHtml = `<div class="modal fade" id="jadwalModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content glass">
-    <div class="modal-header"><h6 class="modal-title">${isEdit ? 'Edit' : 'Tambah'} Slot Jadwal</h6><button class="btn-close" data-bs-dismiss="modal"></button></div>
-    <div class="modal-body">
-      <label class="form-label small fw-semibold">Hari</label>
-      <select class="form-select form-select-sm mb-2" id="jdHari">${hariOptions}</select>
-      <label class="form-label small fw-semibold">Jam</label>
-      <select class="form-select form-select-sm mb-2" id="jdJam">${jamOptions}</select>
-      <label class="form-label small fw-semibold">Kelas</label>
-      <select class="form-select form-select-sm mb-2" id="jdKelas">${kelasOptions}</select>
-      <label class="form-label small fw-semibold">Guru</label>
-      <select class="form-select form-select-sm mb-2" id="jdGuru">${guruOptions}</select>
-      <label class="form-label small fw-semibold">Mapel</label>
-      <select class="form-select form-select-sm mb-2" id="jdMapel">${mapelOptions}</select>
-    </div>
-    <div class="modal-footer">
-      ${isEdit ? `<button class="btn btn-soft text-danger btn-sm me-auto" onclick="hapusJadwal('${existing.id}')"><i class="fa-solid fa-trash me-1"></i>Hapus</button>` : ''}
-      <button class="btn btn-accent btn-sm" onclick='submitFormJadwal(${isEdit ? `"${existing.id}"` : 'null'})'>Simpan</button>
-    </div>
-  </div></div></div>`;
-  document.getElementById('jadwalModalHolder')?.remove();
-  const holder = document.createElement('div'); holder.id = 'jadwalModalHolder'; holder.innerHTML = modalHtml;
-  document.body.appendChild(holder);
-  new bootstrap.Modal(document.getElementById('jadwalModal')).show();
-}
-async function submitFormJadwal(id) {
-  const [jamMulai, jamSelesai] = document.getElementById('jdJam').value.split('|');
-  const data = {
-    hari: document.getElementById('jdHari').value, jamMulai, jamSelesai,
-    kelasId: document.getElementById('jdKelas').value, guruId: document.getElementById('jdGuru').value,
-    mapelId: document.getElementById('jdMapel').value
-  };
-  if (id) data.id = id;
-  bootstrap.Modal.getInstance(document.getElementById('jadwalModal')).hide();
-  await writeData(id ? 'update' : 'create', 'JadwalMengajar', data, id);
-  showToast('Jadwal tersimpan.', 'success');
-  renderJadwalPelajaran();
-}
-async function hapusJadwal(id) {
-  if (!confirm('Yakin ingin menghapus slot jadwal ini?')) return;
-  bootstrap.Modal.getInstance(document.getElementById('jadwalModal'))?.hide();
-  await writeData('delete', 'JadwalMengajar', null, id);
-  showToast('Jadwal dihapus.', 'success');
-  renderJadwalPelajaran();
 }
 
 /*************************************************************
@@ -1432,11 +1355,181 @@ async function simpanProfil() {
   }
 }
 
+
 async function resetPasswordUser(id) {
   const pw = prompt('Masukkan password baru:');
   if (!pw) return;
   const res = await apiCall('manageUser', { sub: 'resetPassword', id, newPassword: pw });
   if (res.success) showToast('Password direset.', 'success');
+}
+
+/*************************************************************
+ * ADMIN: MANAJEMEN KELAS
+ *************************************************************/
+async function renderManajemenKelas() {
+  const rows = getData('Kelas');
+  const guruList = getData('Users', u => u.role === 'Guru' && u.isWali);
+  const tbody = rows.map(k => {
+    const wali = guruList.find(g => g.waliKelasId === k.id);
+    const waliNama = wali ? wali.nama : '<span class="section-sub small">Belum ada wali</span>';
+    const jmlSiswa = getData('DataSiswa', s => s.kelasId === k.id && (s.status === 'Aktif' || s.status === '')).length;
+    return `<tr>
+    <td>${k.namaKelas || '-'}</td><td>${k.tingkat || '-'}</td><td>${k.tahunAjaran || (STATE.config.tapelAktif||'-')}</td>
+    <td>${waliNama}</td><td class="text-center">${jmlSiswa}</td>
+    <td class="text-end">
+      <button class="btn btn-sm btn-soft" onclick='openFormKelas(${JSON.stringify(k).replace(/'/g,"&#39;")})'><i class="fa-solid fa-pen"></i></button>
+      <button class="btn btn-sm btn-soft text-danger" onclick="deleteRow('Kelas','${k.id}')"><i class="fa-solid fa-trash"></i></button>
+    </td></tr>`;
+  }).join('') || `<tr><td colspan="6" class="text-center section-sub py-4">Belum ada data kelas.</td></tr>`;
+
+  document.getElementById('pageContent').innerHTML = `
+    <div class="glass card-section">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="section-title">Data Kelas</div>
+        <button class="btn btn-accent btn-sm" onclick="openFormKelas(null)"><i class="fa-solid fa-plus me-1"></i>Tambah Kelas</button>
+      </div>
+      <div class="table-responsive"><table class="table table-sm align-middle">
+        <thead><tr><th>Nama Kelas</th><th>Tingkat</th><th>Tahun Ajaran</th><th>Wali Kelas</th><th class="text-center">Jml Siswa</th><th></th></tr></thead>
+        <tbody>${tbody}</tbody>
+      </table></div>
+      <p class="section-sub small mt-2"><i class="fa-solid fa-circle-info me-1"></i>Wali kelas ditetapkan di menu Manajemen Data Guru. Tandai guru sebagai wali lalu pilih kelas yang diwali.</p>
+    </div>`;
+}
+function openFormKelas(existing) {
+  const isEdit = !!existing;
+  const modalHtml = `<div class="modal fade" id="kelasModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content glass">
+    <div class="modal-header"><h6 class="modal-title">${isEdit ? 'Edit' : 'Tambah'} Data Kelas</h6><button class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+      <label class="form-label small fw-semibold">Nama Kelas</label>
+      <input class="form-control form-control-sm mb-2" id="klNama" placeholder="Contoh: 7A" value="${isEdit ? (existing.namaKelas||'') : ''}">
+      <label class="form-label small fw-semibold">Tingkat</label>
+      <select class="form-select form-select-sm mb-2" id="klTingkat">
+        ${['7','8','9'].map(t => `<option value="${t}" ${isEdit && existing.tingkat===t?'selected':''}>Kelas ${t}</option>`).join('')}
+      </select>
+      <label class="form-label small fw-semibold">Tahun Ajaran</label>
+      <input class="form-control form-control-sm" id="klTapel" placeholder="Contoh: 2026/2027" value="${isEdit ? (existing.tahunAjaran||'') : (STATE.config.tapelAktif||'')}">
+    </div>
+    <div class="modal-footer"><button class="btn btn-accent btn-sm" onclick='submitFormKelas(${isEdit ? `"${existing.id}"` : 'null'})'>Simpan</button></div>
+  </div></div></div>`;
+  document.getElementById('kelasModalHolder')?.remove();
+  const holder = document.createElement('div'); holder.id = 'kelasModalHolder'; holder.innerHTML = modalHtml;
+  document.body.appendChild(holder);
+  new bootstrap.Modal(document.getElementById('kelasModal')).show();
+}
+async function submitFormKelas(id) {
+  const data = {
+    namaKelas: document.getElementById('klNama').value,
+    tingkat: document.getElementById('klTingkat').value,
+    tahunAjaran: document.getElementById('klTapel').value
+  };
+  if (id) data.id = id;
+  bootstrap.Modal.getInstance(document.getElementById('kelasModal')).hide();
+  await writeData(id ? 'update' : 'create', 'Kelas', data, id);
+  showToast('Data kelas tersimpan.', 'success');
+  renderManajemenKelas();
+}
+
+/*************************************************************
+ * ADMIN: MANAJEMEN MAPEL
+ *************************************************************/
+async function renderManajemenMapel() {
+  const rows = getData('Mapel');
+  const guruList = getData('Users', u => u.role === 'Guru');
+  const tbody = rows.map(m => {
+    // Hitung berapa guru yang mengajar mapel ini
+    const guruPengampu = guruList.filter(g => {
+      if (!g.mapelIds) return false;
+      const ids = Array.isArray(g.mapelIds) ? g.mapelIds : String(g.mapelIds).split(',').map(s=>s.trim());
+      return ids.includes(m.id);
+    });
+    const guruNames = guruPengampu.map(g => g.nama).join(', ') || '<span class="section-sub small">Belum ada</span>';
+    return `<tr>
+    <td>${m.kodeMapel || '-'}</td><td>${m.namaMapel || '-'}</td><td>${m.jenjang || '-'}</td>
+    <td>${m.kkm || '-'}</td><td>${guruNames}</td>
+    <td class="text-end">
+      <button class="btn btn-sm btn-soft" onclick='openFormMapel(${JSON.stringify(m).replace(/'/g,"&#39;")})'><i class="fa-solid fa-pen"></i></button>
+      <button class="btn btn-sm btn-soft text-danger" onclick="deleteRow('Mapel','${m.id}')"><i class="fa-solid fa-trash"></i></button>
+    </td></tr>`;
+  }).join('') || `<tr><td colspan="6" class="text-center section-sub py-4">Belum ada data mapel.</td></tr>`;
+
+  document.getElementById('pageContent').innerHTML = `
+    <div class="glass card-section">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="section-title">Data Mata Pelajaran</div>
+        <button class="btn btn-accent btn-sm" onclick="openFormMapel(null)"><i class="fa-solid fa-plus me-1"></i>Tambah Mapel</button>
+      </div>
+      <div class="table-responsive"><table class="table table-sm align-middle">
+        <thead><tr><th>Kode</th><th>Nama Mapel</th><th>Jenjang</th><th>KKM</th><th>Guru Pengampu</th><th></th></tr></thead>
+        <tbody>${tbody}</tbody>
+      </table></div>
+    </div>`;
+}
+function openFormMapel(existing) {
+  const isEdit = !!existing;
+  const modalHtml = `<div class="modal fade" id="mapelModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content glass">
+    <div class="modal-header"><h6 class="modal-title">${isEdit ? 'Edit' : 'Tambah'} Data Mapel</h6><button class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+      <label class="form-label small fw-semibold">Kode Mapel</label>
+      <input class="form-control form-control-sm mb-2" id="mpKode" placeholder="Contoh: MTK7" value="${isEdit ? (existing.kodeMapel||'') : ''}">
+      <label class="form-label small fw-semibold">Nama Mapel</label>
+      <input class="form-control form-control-sm mb-2" id="mpNama" placeholder="Contoh: Matematika" value="${isEdit ? (existing.namaMapel||'') : ''}">
+      <label class="form-label small fw-semibold">Jenjang</label>
+      <select class="form-select form-select-sm mb-2" id="mpJenjang">
+        ${['SMP','MTS','SMA','MA','SD','MI'].map(j => `<option value="${j}" ${isEdit && existing.jenjang===j?'selected':''}>${j}</option>`).join('')}
+      </select>
+      <label class="form-label small fw-semibold">KKM</label>
+      <input type="number" class="form-control form-control-sm" id="mpKkm" min="0" max="100" placeholder="70" value="${isEdit ? (existing.kkm||'') : ''}">
+    </div>
+    <div class="modal-footer"><button class="btn btn-accent btn-sm" onclick='submitFormMapel(${isEdit ? `"${existing.id}"` : 'null'})'>Simpan</button></div>
+  </div></div></div>`;
+  document.getElementById('mapelModalHolder')?.remove();
+  const holder = document.createElement('div'); holder.id = 'mapelModalHolder'; holder.innerHTML = modalHtml;
+  document.body.appendChild(holder);
+  new bootstrap.Modal(document.getElementById('mapelModal')).show();
+}
+async function submitFormMapel(id) {
+  const data = {
+    kodeMapel: document.getElementById('mpKode').value,
+    namaMapel: document.getElementById('mpNama').value,
+    jenjang: document.getElementById('mpJenjang').value,
+    kkm: document.getElementById('mpKkm').value
+  };
+  if (id) data.id = id;
+  bootstrap.Modal.getInstance(document.getElementById('mapelModal')).hide();
+  await writeData(id ? 'update' : 'create', 'Mapel', data, id);
+  showToast('Data mapel tersimpan.', 'success');
+  renderManajemenMapel();
+}
+
+/*************************************************************
+ * ADMIN: KONFIGURASI SEKOLAH
+ *************************************************************/
+async function renderKonfigurasi() {
+  const cfg = {}; getData('Config').forEach(r => cfg[r.key] = r.value);
+
+  const fields = ['namaSekolah','alamatSekolah','npsn','kepsekNama','kepsekNip','logoUrl','tapelAktif','semesterAktif'];
+  const labels = {namaSekolah:'Nama Sekolah', alamatSekolah:'Alamat', npsn:'NPSN', kepsekNama:'Nama Kepala Sekolah',
+    kepsekNip:'NIP Kepala Sekolah', logoUrl:'URL Logo Sekolah', tapelAktif:'Tahun Ajaran Aktif', semesterAktif:'Semester Aktif'};
+
+  const html = fields.map(f => `
+    <div class="mb-2"><label class="form-label small fw-semibold">${labels[f]}</label>
+    <input class="form-control form-control-sm" id="cfg_${f}" value="${cfg[f]||''}"></div>`).join('');
+
+  document.getElementById('pageContent').innerHTML = `
+    <div class="glass card-section" style="max-width:560px;">
+      <div class="section-title mb-3">Konfigurasi Sekolah</div>
+      ${html}
+      <button class="btn btn-accent btn-sm mt-2" onclick="simpanKonfigurasi()"><i class="fa-solid fa-save me-1"></i>Simpan</button>
+    </div>`;
+}
+async function simpanKonfigurasi() {
+  const fields = ['namaSekolah','alamatSekolah','npsn','kepsekNama','kepsekNip','logoUrl','tapelAktif','semesterAktif'];
+  const data = {};
+  fields.forEach(f => data[f] = document.getElementById('cfg_' + f).value);
+
+  // 1x request untuk semua field (sebelumnya 8x request berurutan -> lambat)
+  const res = await apiCall('bulkUpdateConfig', { data });
+  if (res.success) { showToast('Konfigurasi disimpan.', 'success'); STATE._logoBase64 = undefined; await loadConfig(); }
 }
 
 /*************************************************************
@@ -1482,35 +1575,263 @@ function printLembarKontrol() {
   });
 }
 
+
 /*************************************************************
- * ADMIN: KONFIGURASI SEKOLAH
+ * KALENDER JADWAL (Google Calendar style, slot-based)
+ * - Admin (isAdmin=true): lihat semua jadwal, bisa tambah/edit/hapus
+ * - Guru (isAdmin=false): lihat jadwal dirinya saja, read-only
  *************************************************************/
-async function renderKonfigurasi() {
-  const cfg = {}; getData('Config').forEach(r => cfg[r.key] = r.value);
+const KAL_DAYS = ['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+const KAL_START = 7 * 60;   // 07:00 dalam menit
+const KAL_END   = 15 * 60;  // 15:00 dalam menit
+const KAL_SLOT  = 30;       // 30 menit per slot
 
-  const fields = ['namaSekolah','alamatSekolah','npsn','kepsekNama','kepsekNip','logoUrl','tapelAktif','semesterAktif'];
-  const labels = {namaSekolah:'Nama Sekolah', alamatSekolah:'Alamat', npsn:'NPSN', kepsekNama:'Nama Kepala Sekolah',
-    kepsekNip:'NIP Kepala Sekolah', logoUrl:'URL Logo Sekolah', tapelAktif:'Tahun Ajaran Aktif', semesterAktif:'Semester Aktif'};
-
-  const html = fields.map(f => `
-    <div class="mb-2"><label class="form-label small fw-semibold">${labels[f]}</label>
-    <input class="form-control form-control-sm" id="cfg_${f}" value="${cfg[f]||''}"></div>`).join('');
-
-  document.getElementById('pageContent').innerHTML = `
-    <div class="glass card-section" style="max-width:560px;">
-      <div class="section-title mb-3">Konfigurasi Sekolah</div>
-      ${html}
-      <button class="btn btn-accent btn-sm mt-2" onclick="simpanKonfigurasi()"><i class="fa-solid fa-save me-1"></i>Simpan</button>
-    </div>`;
+function timeToMin(t) {
+  if (!t) return null;
+  const parts = String(t).split(':');
+  if (parts.length < 2) return null;
+  return (parseInt(parts[0]) || 0) * 60 + (parseInt(parts[1]) || 0);
 }
-async function simpanKonfigurasi() {
-  const fields = ['namaSekolah','alamatSekolah','npsn','kepsekNama','kepsekNip','logoUrl','tapelAktif','semesterAktif'];
-  const data = {};
-  fields.forEach(f => data[f] = document.getElementById('cfg_' + f).value);
+function minToLabel(min) {
+  const h = Math.floor(min / 60), m = min % 60;
+  return String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0');
+}
 
-  // 1x request untuk semua field (sebelumnya 8x request berurutan -> lambat)
-  const res = await apiCall('bulkUpdateConfig', { data });
-  if (res.success) { showToast('Konfigurasi disimpan.', 'success'); STATE._logoBase64 = undefined; await loadConfig(); }
+async function renderKalenderJadwal(isAdmin) {
+  const allJadwal = getData('JadwalMengajar');
+  const kelasList = getData('Kelas');
+  const mapelList = getData('Mapel');
+  const guruList  = getData('Users');
+
+  // Filter: guru hanya lihat miliknya
+  const jadwalRows = isAdmin ? allJadwal : allJadwal.filter(j => j.guruId === STATE.user.id);
+
+  // Filter toolbar (admin bisa filter per kelas/guru)
+  const filterKelas = isAdmin ? '' : '';
+  const filterHtml = isAdmin ? `
+    <div class="kal-toolbar glass card-section">
+      <div class="section-title"><i class="fa-solid fa-calendar-week me-1"></i> Manajemen Jadwal Pelajaran</div>
+      <div class="kal-filters">
+        <select class="form-select form-select-sm" id="kalFilterKelas" onchange="renderKalenderGrid(${isAdmin})" style="width:auto;">
+          <option value="">Semua Kelas</option>
+          ${kelasList.map(k => `<option value="${k.id}">${k.namaKelas}</option>`).join('')}
+        </select>
+        <select class="form-select form-select-sm" id="kalFilterGuru" onchange="renderKalenderGrid(${isAdmin})" style="width:auto;">
+          <option value="">Semua Guru</option>
+          ${guruList.filter(u=>u.role==='Guru').map(g => `<option value="${g.id}">${g.nama}</option>`).join('')}
+        </select>
+        <button class="btn btn-accent btn-sm" onclick="openFormJadwal(null, ${isAdmin})"><i class="fa-solid fa-plus me-1"></i>Tambah Jadwal</button>
+      </div>
+    </div>` : `
+    <div class="kal-toolbar glass card-section" style="justify-content:flex-start;">
+      <div class="section-title me-3"><i class="fa-solid fa-calendar-days me-1"></i> Jadwal Mengajar Saya</div>
+      <span class="chip" style="background:#3a5aff20;color:#3a5aff"><i class="fa-solid fa-lock me-1"></i>Read-only</span>
+    </div>`;
+
+  // Container untuk grid (akan di-render terpisah supaya filter tidak reload seluruh halaman)
+  document.getElementById('pageContent').innerHTML = `
+    ${filterHtml}
+    <div class="glass card-section">
+      <div id="kalGridHolder">Memuat kalender...</div>
+      <div class="kal-legend">
+        <span><i style="background:#3a5aff;"></i>Senin</span>
+        <span><i style="background:#12b76a;"></span>Selasa</span>
+        <span><i style="background:#f79009;"></span>Rabu</span>
+        <span><i style="background:#7b3aff;"></span>Kamis</span>
+        <span><i style="background:#f04438;"></span>Jumat</span>
+        <span><i style="background:#0891b2;"></span>Sabtu</span>
+      </div>
+    </div>`;
+
+  window._kalState = { isAdmin, jadwalRows, kelasList, mapelList, guruList };
+  renderKalenderGrid(isAdmin);
+}
+
+function renderKalenderGrid(isAdmin) {
+  const st = window._kalState;
+  if (!st) return;
+  let rows = st.jadwalRows;
+
+  // Apply filters for admin
+  if (isAdmin) {
+    const fk = document.getElementById('kalFilterKelas')?.value;
+    const fg = document.getElementById('kalFilterGuru')?.value;
+    if (fk) rows = rows.filter(j => j.kelasId === fk);
+    if (fg) rows = rows.filter(j => j.guruId === fg);
+  }
+
+  const totalSlots = (KAL_END - KAL_START) / KAL_SLOT; // 16 slots
+  const today = new Date().getDay(); // 0=Min, 1=Sen, ...
+  const todayIdx = today === 0 ? -1 : today - 1; // index 0-5 untuk Sen-Sab
+
+  // Build header row
+  let html = `<div class="kal-wrap"><div class="kal-grid">
+    <div class="kal-head" style="background:rgba(255,255,255,.85);border-right:2px solid rgba(58,90,255,.18);"></div>`;
+  KAL_DAYS.forEach((d, i) => {
+    html += `<div class="kal-head ${i === todayIdx ? 'today' : ''}">${d}${i === todayIdx ? '<div class="section-sub" style="font-size:.6rem;font-weight:400;">Hari ini</div>' : ''}</div>`;
+  });
+
+  // Build time rows + slot cells
+  for (let s = 0; s < totalSlots; s++) {
+    const min = KAL_START + s * KAL_SLOT;
+    const nextMin = min + KAL_SLOT;
+    const label = minToLabel(min);
+    html += `<div class="kal-time">${label}</div>`;
+
+    for (let d = 0; d < KAL_DAYS.length; d++) {
+      html += `<div class="kal-cell" data-day="${d}" data-min="${min}">`;
+
+      // Cari jadwal yang mulai tepat di slot ini
+      const slotStart = min;
+      const blocks = rows.filter(j => {
+        if (KAL_DAYS.indexOf(j.hari) !== d) return false;
+        const jStart = timeToMin(j.jamMulai);
+        if (jStart === null) return false;
+        // Snap start time down to nearest slot boundary
+        const jStartSlot = Math.floor((jStart - KAL_START) / KAL_SLOT) * KAL_SLOT + KAL_START;
+        return jStartSlot === slotStart;
+      });
+
+      blocks.forEach(j => {
+        const jStartRaw = timeToMin(j.jamMulai) || KAL_START;
+        const jEndRaw = timeToMin(j.jamSelesai) || (jStartRaw + KAL_SLOT);
+        // Snap start down, end up to slot boundaries
+        const jStartSlot = Math.floor((jStartRaw - KAL_START) / KAL_SLOT) * KAL_SLOT + KAL_START;
+        const jEndSlot = Math.ceil((jEndRaw - KAL_START) / KAL_SLOT) * KAL_SLOT + KAL_START;
+        const spanSlots = Math.max(1, (jEndSlot - jStartSlot) / KAL_SLOT);
+        const mapelNama = getMapelNama(j.mapelId);
+        const kelasNama = getKelasNama(j.kelasId);
+        const guruNama = getGuruNama(j.guruId);
+        const color = getMapelColor(j.mapelId);
+        const subLine = isAdmin
+          ? `${kelasNama} · ${guruNama}`
+          : `${kelasNama} · ${j.jamMulai || ''}-${j.jamSelesai || ''}`;
+        const clickAttr = isAdmin
+          ? `onclick="openFormJadwal(${JSON.stringify(j).replace(/'/g,'&#39;').replace(/"/g,'&quot;')}, true)"`
+          : '';
+        const roClass = isAdmin ? '' : 'readonly';
+        html += `<div class="kal-slot ${roClass}" style="height:calc(${spanSlots} * 44px + ${(spanSlots-1)} * 1px - 6px);background:${color};" ${clickAttr}>
+          <div class="kal-slot-mapel">${mapelNama}${j.jamKe ? ' (Jam ' + j.jamKe + ')' : ''}</div>
+          <div class="kal-slot-sub">${subLine}</div>
+        </div>`;
+      });
+
+      // Empty hint for admin (click to add)
+      if (isAdmin && blocks.length === 0) {
+        html += `<div class="kal-empty-hint" onclick="openFormJadwalAt(${d}, ${min}, true)"><i class="fa-solid fa-plus"></i></div>`;
+      }
+
+      html += `</div>`;
+    }
+  }
+
+  html += `</div></div>`;
+
+  // Summary stats
+  const totalJadwal = rows.length;
+  const summary = isAdmin
+    ? `<div class="d-flex justify-content-between align-items-center mt-2">
+        <span class="section-sub small">Total: <strong>${totalJadwal}</strong> jadwal ditampilkan. Klik slot kosong untuk menambah, klik blok untuk edit.</span>
+      </div>`
+    : `<div class="d-flex justify-content-between align-items-center mt-2">
+        <span class="section-sub small">Total: <strong>${totalJadwal}</strong> jadwal mengajar Anda minggu ini.</span>
+      </div>`;
+  html = summary + html;
+
+  document.getElementById('kalGridHolder').innerHTML = html;
+}
+
+function openFormJadwalAt(dayIdx, min, isAdmin) {
+  if (!isAdmin) return;
+  const hari = KAL_DAYS[dayIdx];
+  const jamMulai = minToLabel(min);
+  const jamSelesai = minToLabel(min + KAL_SLOT);
+  openFormJadwal({ hari, jamMulai, jamSelesai }, true);
+}
+
+function openFormJadwal(existing, isAdmin) {
+  if (!isAdmin) { showToast('Anda tidak dapat mengedit jadwal (read-only).', 'warning'); return; }
+  const isEdit = !!existing && !!existing.id;
+  const kelasList = window._kalState?.kelasList || getData('Kelas');
+  const mapelList = window._kalState?.mapelList || getData('Mapel');
+  const guruList  = (window._kalState?.guruList || getData('Users')).filter(u => u.role === 'Guru');
+
+  const modalHtml = `<div class="modal fade" id="jadwalModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content glass">
+    <div class="modal-header"><h6 class="modal-title">${isEdit ? 'Edit' : 'Tambah'} Jadwal Pelajaran</h6><button class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+      <div class="row g-2">
+        <div class="col-md-6">
+          <label class="form-label small fw-semibold">Hari</label>
+          <select class="form-select form-select-sm mb-2" id="jdHari">
+            ${KAL_DAYS.map(d => `<option value="${d}" ${isEdit && existing.hari===d?'selected':''}>${d}</option>`).join('')}
+          </select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label small fw-semibold">Jam Ke</label>
+          <input class="form-control form-control-sm mb-2" id="jdJamKe" placeholder="Contoh: 1-2" value="${isEdit ? (existing.jamKe||'') : ''}">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label small fw-semibold">Jam Mulai</label>
+          <input type="time" class="form-control form-control-sm mb-2" id="jdMulai" value="${isEdit ? (existing.jamMulai||'07:00') : '07:00'}">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label small fw-semibold">Jam Selesai</label>
+          <input type="time" class="form-control form-control-sm mb-2" id="jdSelesai" value="${isEdit ? (existing.jamSelesai||'07:45') : '07:45'}">
+        </div>
+        <div class="col-md-12">
+          <label class="form-label small fw-semibold">Kelas</label>
+          <select class="form-select form-select-sm mb-2" id="jdKelas">
+            ${kelasList.map(k => `<option value="${k.id}" ${isEdit && existing.kelasId===k.id?'selected':''}>${k.namaKelas}</option>`).join('')}
+          </select>
+        </div>
+        <div class="col-md-12">
+          <label class="form-label small fw-semibold">Mata Pelajaran</label>
+          <select class="form-select form-select-sm mb-2" id="jdMapel">
+            ${mapelList.map(m => `<option value="${m.id}" ${isEdit && existing.mapelId===m.id?'selected':''}>${m.namaMapel}${m.kodeMapel?' ('+m.kodeMapel+')':''}</option>`).join('')}
+          </select>
+        </div>
+        <div class="col-md-12">
+          <label class="form-label small fw-semibold">Guru Pengampu</label>
+          <select class="form-select form-select-sm" id="jdGuru">
+            ${guruList.map(g => `<option value="${g.id}" ${isEdit && existing.guruId===g.id?'selected':''}>${g.nama}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      ${isEdit ? `<button class="btn btn-soft btn-sm text-danger me-auto" onclick="deleteRow('JadwalMengajar','${existing.id}');bootstrap.Modal.getInstance(document.getElementById('jadwalModal')).hide();"><i class="fa-solid fa-trash me-1"></i>Hapus</button>` : ''}
+      <button class="btn btn-accent btn-sm" onclick='submitFormJadwal(${isEdit ? `"${existing.id}"` : 'null'})'>Simpan</button>
+    </div>
+  </div></div></div>`;
+  document.getElementById('jadwalModalHolder')?.remove();
+  const holder = document.createElement('div'); holder.id = 'jadwalModalHolder'; holder.innerHTML = modalHtml;
+  document.body.appendChild(holder);
+  new bootstrap.Modal(document.getElementById('jadwalModal')).show();
+}
+
+async function submitFormJadwal(id) {
+  const mulai = document.getElementById('jdMulai').value;
+  const selesai = document.getElementById('jdSelesai').value;
+  if (mulai && selesai && mulai >= selesai) {
+    showToast('Jam selesai harus setelah jam mulai.', 'danger');
+    return;
+  }
+  const data = {
+    hari: document.getElementById('jdHari').value,
+    jamKe: document.getElementById('jdJamKe').value,
+    jamMulai: mulai,
+    jamSelesai: selesai,
+    kelasId: document.getElementById('jdKelas').value,
+    mapelId: document.getElementById('jdMapel').value,
+    guruId: document.getElementById('jdGuru').value
+  };
+  if (id) data.id = id;
+  bootstrap.Modal.getInstance(document.getElementById('jadwalModal')).hide();
+  await writeData(id ? 'update' : 'create', 'JadwalMengajar', data, id);
+  showToast('Jadwal tersimpan.', 'success');
+  // Refresh data & re-render
+  await syncTable('JadwalMengajar');
+  renderKalenderJadwal(window._kalState?.isAdmin || STATE.user.role === 'Admin');
 }
 
 /*************************************************************
