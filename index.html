@@ -178,11 +178,24 @@ let STATE = {
   currentPage: 'dashboard'
 };
 
+// Cache sederhana di memori browser utk data yg jarang berubah (Kelas, Users, Config, dst)
+// Supaya pindah menu gak fetch ulang data yang sama berkali-kali.
+const CACHE = { store: {}, ttl: 60000 }; // 60 detik
+async function apiCallCached(table) {
+  const now = Date.now();
+  const hit = CACHE.store[table];
+  if (hit && (now - hit.time) < CACHE.ttl) return hit.data;
+  const res = await apiCall('getAll', { table });
+  if (res.success) CACHE.store[table] = { time: now, data: res };
+  return res;
+}
+function invalidateCache(table) { delete CACHE.store[table]; }
+
 /*************************************************************
  * HTTP HELPER
  *************************************************************/
-async function apiCall(action, payload = {}, method = 'POST') {
-  showSpinner(true);
+async function apiCall(action, payload = {}, silent = false) {
+  if (!silent) showSpinner(true);
   try {
     const body = Object.assign({ action, token: STATE.token }, payload);
     const res = await fetch(API_URL, {
@@ -199,7 +212,7 @@ async function apiCall(action, payload = {}, method = 'POST') {
     showToast('Gagal terhubung ke server: ' + err.message, 'danger');
     return { success: false, message: err.message };
   } finally {
-    showSpinner(false);
+    if (!silent) showSpinner(false);
   }
 }
 
@@ -270,14 +283,15 @@ window.addEventListener('DOMContentLoaded', async () => {
 async function bootApp() {
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('appScreen').style.display = 'block';
-  await loadConfig();
 
-  document.getElementById('topAvatar').src = STATE.config.logoUrl || 'https://placehold.co/40x40';
+  // Render UI langsung pakai data lokal dulu (instan), config & dashboard nyusul di background
   document.getElementById('topUserName').textContent = STATE.user.nama;
   document.getElementById('topUserRole').textContent = STATE.user.role;
-
   renderMenu();
   navigate('dashboard');
+
+  await loadConfig();
+  document.getElementById('topAvatar').src = STATE.config.logoUrl || 'https://placehold.co/40x40';
 }
 
 /*************************************************************
@@ -467,26 +481,37 @@ async function submitForm(table, columns, id) {
   if (STATE.user.role === 'Guru' && columns.some(c => c.key === 'guruId')) data.guruId = STATE.user.id;
   columns.forEach(c => data[c.key] = document.getElementById('f_' + c.key).value);
 
-  const res = id ? await apiCall('update', { table, data }) : await apiCall('create', { table, data });
+  // Tutup modal dulu & kasih feedback instan, baru sync ke server di background (silent, gak block layar)
+  bootstrap.Modal.getInstance(document.getElementById('dynModal')).hide();
+  showToast('Menyimpan...', 'primary');
+  const res = id ? await apiCall('update', { table, data }, true) : await apiCall('create', { table, data }, true);
   if (res.success) {
     showToast('Data berhasil disimpan.', 'success');
-    bootstrap.Modal.getInstance(document.getElementById('dynModal')).hide();
+    invalidateCache(table);
     navigate(STATE.currentPage);
   }
 }
 
 async function deleteRow(table, id) {
   if (!confirm('Yakin ingin menghapus data ini?')) return;
-  const res = await apiCall('delete', { table, id });
-  if (res.success) { showToast('Data dihapus.', 'success'); navigate(STATE.currentPage); }
+  // Hapus barisnya dari tampilan langsung (optimistic), sync ke server tanpa nge-block spinner
+  document.querySelectorAll('tr').forEach(tr => {
+    if (tr.innerHTML.includes(`deleteRow('${table}','${id}')`)) tr.style.opacity = '0.3';
+  });
+  const res = await apiCall('delete', { table, id }, true);
+  if (res.success) { showToast('Data dihapus.', 'success'); invalidateCache(table); navigate(STATE.currentPage); }
+  else navigate(STATE.currentPage); // rollback tampilan kalau gagal
 }
 
 /*************************************************************
  * ABSENSI
  *************************************************************/
 async function renderAbsensi() {
-  const kelasRes = await apiCall('getAll', { table: 'Kelas' });
-  const siswaRes = await apiCall('getAll', { table: 'DataSiswa' });
+  // Fetch paralel (bukan berurutan) + pakai cache utk data Kelas yg jarang berubah
+  const [kelasRes, siswaRes] = await Promise.all([
+    apiCallCached('Kelas'),
+    apiCall('getAll', { table: 'DataSiswa' })
+  ]);
   const kelasOptions = (kelasRes.data || []).map(k => `<option value="${k.id}">${k.namaKelas}</option>`).join('');
 
   document.getElementById('pageContent').innerHTML = `
@@ -540,7 +565,7 @@ async function simpanAbsensi() {
  * NILAI (LEGER DINAMIS)
  *************************************************************/
 async function renderNilai() {
-  const kelasRes = await apiCall('getAll', { table: 'Kelas' });
+  const kelasRes = await apiCallCached('Kelas');
   const kelasOptions = (kelasRes.data || []).map(k => `<option value="${k.id}">${k.namaKelas}</option>`).join('');
 
   document.getElementById('pageContent').innerHTML = `
