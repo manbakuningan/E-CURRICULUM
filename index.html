@@ -1,2399 +1,1001 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sistem Administrasi Guru</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Sistem Administrasi Guru</title>
 
-  <!-- Bootstrap 5 -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
-  <!-- FontAwesome -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-  <!-- Google Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-  <!-- jsPDF + AutoTable -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
-  <!-- JsBarcode -->
-  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
-  <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.1/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.5/JsBarcode.all.min.js"></script>
 
-  <style>
-    :root{
-      --platinum-1:#e5e4e2;
-      --platinum-2:#c0c0c0;
-      --platinum-3:#a8a8a8;
-      --gold-1:#d4af37;
-      --gold-2:#f4d160;
-      --ink-1:#1a1a2e;
-      --ink-2:#16213e;
-      --glass-bg:rgba(255,255,255,0.10);
-      --glass-border:rgba(255,255,255,0.18);
-      --glass-shadow:0 8px 32px rgba(0,0,0,0.18);
-    }
-    *{box-sizing:border-box;}
-    html,body{height:100%;margin:0;}
-    body{
-      font-family:'Inter',system-ui,sans-serif;
-      background:
-        radial-gradient(1200px 600px at 10% -10%, rgba(212,175,55,0.25), transparent 60%),
-        radial-gradient(1000px 500px at 110% 110%, rgba(192,192,192,0.30), transparent 60%),
-        linear-gradient(135deg,#0f172a 0%, #1a1a2e 50%, #16213e 100%);
-      color:#f5f5f7;
-      min-height:100vh;
-      overflow-x:hidden;
-    }
-    .display-font{font-family:'Playfair Display', serif;}
-    .glass{
-      background:var(--glass-bg);
-      backdrop-filter:blur(20px) saturate(180%);
-      -webkit-backdrop-filter:blur(20px) saturate(180%);
-      border:1px solid var(--glass-border);
-      box-shadow:var(--glass-shadow);
-      border-radius:18px;
-    }
-    .glass-strong{
-      background:rgba(255,255,255,0.16);
-      backdrop-filter:blur(28px) saturate(200%);
-      -webkit-backdrop-filter:blur(28px) saturate(200%);
-      border:1px solid rgba(255,255,255,0.25);
-      box-shadow:0 12px 40px rgba(0,0,0,0.25);
-      border-radius:20px;
-    }
-    .gold-text{
-      background:linear-gradient(135deg,var(--gold-1),var(--gold-2));
-      -webkit-background-clip:text;background-clip:text;
-      -webkit-text-fill-color:transparent;color:transparent;
-    }
-    .gold-border{border:1px solid rgba(212,175,55,0.45) !important;}
-    .btn-platinum{
-      background:linear-gradient(135deg,#f5f5f7 0%, #c0c0c0 100%);
-      color:#1a1a2e;border:none;font-weight:600;
-      transition:all .25s ease;
-    }
-    .btn-platinum:hover{
-      transform:translateY(-1px);
-      box-shadow:0 6px 18px rgba(192,192,192,0.35);
-      color:#0f172a;
-    }
-    .btn-gold{
-      background:linear-gradient(135deg,var(--gold-1),var(--gold-2));
-      color:#1a1a2e;border:none;font-weight:600;
-    }
-    .btn-gold:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(212,175,55,0.45);}
+<style>
+:root{
+  --platinum-1:#f4f6f9; --platinum-2:#e8ecf3; --glass-bg: rgba(255,255,255,.55);
+  --glass-border: rgba(255,255,255,.35); --accent:#3a5aff; --accent-2:#7b3aff;
+  --ink:#1c2333; --muted:#6b7385; --success:#12b76a; --warn:#f79009; --danger:#f04438;
+  --sidebar-w: 264px;
+}
+*{box-sizing:border-box}
+body{
+  font-family:'Plus Jakarta Sans',sans-serif; color:var(--ink);
+  background: radial-gradient(1200px 600px at 10% -10%, #e6ecff 0%, transparent 60%),
+              radial-gradient(1000px 500px at 110% 10%, #ffe6f6 0%, transparent 55%),
+              linear-gradient(180deg, var(--platinum-1), var(--platinum-2));
+  min-height:100vh;
+}
+.glass{
+  background: var(--glass-bg); backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  border:1px solid var(--glass-border); border-radius:18px;
+  box-shadow: 0 8px 32px rgba(30,40,80,.10);
+}
+/* ===== LOGIN ===== */
+#loginScreen{min-height:100vh; display:flex; align-items:center; justify-content:center; padding:16px;}
+.login-card{width:100%; max-width:400px; padding:40px 32px;}
+.login-logo{width:64px; height:64px; border-radius:16px; object-fit:cover; background:#fff;}
+.form-control, .form-select{
+  background: rgba(255,255,255,.6); border:1px solid rgba(0,0,0,.08); border-radius:12px; padding:11px 14px;
+}
+.form-control:focus, .form-select:focus{ box-shadow:0 0 0 3px rgba(58,90,255,.15); border-color:var(--accent); }
+.btn-accent{
+  background:linear-gradient(135deg, var(--accent), var(--accent-2)); border:none; color:#fff; border-radius:12px;
+  padding:11px; font-weight:600; letter-spacing:.2px;
+}
+.btn-accent:hover{ filter:brightness(1.08); color:#fff; }
 
-    /* ===== LOGIN ===== */
-    #loginScreen{
-      position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
-      padding:1rem;z-index:1000;
-    }
-    .login-card{max-width:440px;width:100%;padding:2.5rem;}
-    .login-logo{
-      width:80px;height:80px;border-radius:50%;
-      background:linear-gradient(135deg,var(--gold-1),var(--gold-2));
-      display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;
-      box-shadow:0 8px 24px rgba(212,175,55,0.45);
-      overflow:hidden;
-    }
-    .login-logo img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
-    .login-logo i{font-size:2.2rem;color:#1a1a2e;}
-    .form-control-glass{
-      background:rgba(255,255,255,0.10);
-      border:1px solid rgba(255,255,255,0.20);
-      color:#fff;border-radius:12px;padding:.75rem 1rem;
-    }
-    .form-control-glass::placeholder{color:rgba(245,245,247,0.55);}
-    .form-control-glass:focus{
-      background:rgba(255,255,255,0.14);
-      border-color:var(--gold-1);
-      box-shadow:0 0 0 .2rem rgba(212,175,55,0.25);
-      color:#fff;outline:none;
-    }
-    .form-control-glass option{color:#1a1a2e;}
-    .form-label-glass{color:rgba(245,245,247,0.85);font-size:.875rem;font-weight:500;margin-bottom:.4rem;}
+/* ===== APP LAYOUT ===== */
+#appScreen{display:none;}
+.sidebar{
+  position:fixed; top:0; left:0; height:100vh; width:var(--sidebar-w); z-index:1030;
+  padding:20px 14px; overflow-y:auto; border-radius:0 24px 24px 0;
+  transition: transform .25s ease;
+}
+.sidebar-brand{display:flex; align-items:center; gap:10px; padding:8px 10px 20px;}
+.sidebar-brand img{width:38px; height:38px; border-radius:10px; object-fit:cover; background:#fff;}
+.sidebar-brand div{line-height:1.15;}
+.nav-section{font-size:.68rem; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); margin:16px 10px 6px;}
+.nav-link-app{
+  display:flex; align-items:center; gap:12px; padding:10px 14px; border-radius:12px; color:var(--ink);
+  font-weight:500; font-size:.92rem; margin-bottom:3px; cursor:pointer; transition:.15s;
+}
+.nav-link-app i{width:18px; text-align:center; color:var(--muted);}
+.nav-link-app:hover{ background:rgba(58,90,255,.08); }
+.nav-link-app.active{ background:linear-gradient(135deg, var(--accent), var(--accent-2)); color:#fff; }
+.nav-link-app.active i{ color:#fff; }
 
-    /* ===== APP SHELL ===== */
-    #appScreen{display:none;min-height:100vh;}
-    .layout{display:flex;min-height:100vh;}
-    .sidebar{
-      width:260px;flex-shrink:0;
-      padding:1.25rem 1rem;
-      position:fixed;top:0;left:0;bottom:0;
-      z-index:1040;
-      transition:transform .3s ease;
-      overflow-y:auto;
-    }
-    .sidebar .brand{
-      display:flex;align-items:center;gap:.75rem;
-      padding:.5rem .5rem 1.25rem;
-      border-bottom:1px solid rgba(255,255,255,0.10);
-      margin-bottom:1rem;
-    }
-    .sidebar .brand-logo{
-      width:42px;height:42px;border-radius:10px;overflow:hidden;
-      background:linear-gradient(135deg,var(--gold-1),var(--gold-2));
-      display:flex;align-items:center;justify-content:center;flex-shrink:0;
-    }
-    .sidebar .brand-logo img{width:100%;height:100%;object-fit:cover;}
-    .sidebar .brand-logo i{color:#1a1a2e;font-size:1.1rem;}
-    .sidebar .brand-name{font-size:.95rem;font-weight:700;line-height:1.2;}
-    .sidebar .brand-sub{font-size:.7rem;color:rgba(245,245,247,0.55);}
+.main-wrap{ margin-left:var(--sidebar-w); min-height:100vh; padding:18px 22px 60px; transition:margin .25s ease;}
+.topbar{ display:flex; align-items:center; justify-content:space-between; padding:12px 18px; margin-bottom:18px;}
+.avatar{width:40px; height:40px; border-radius:50%; object-fit:cover; background:#fff; border:2px solid #fff;}
+#sidebarOverlay{ position:fixed; inset:0; background:rgba(10,15,30,.35); z-index:1020; display:none; }
+.burger{ display:none; }
 
-    .menu-group-label{
-      font-size:.65rem;text-transform:uppercase;letter-spacing:.12em;
-      color:rgba(212,175,55,0.85);font-weight:700;
-      padding:0 .75rem;margin:1rem 0 .5rem;
-    }
-    .menu-item{
-      display:flex;align-items:center;gap:.75rem;
-      padding:.65rem .85rem;border-radius:10px;
-      color:rgba(245,245,247,0.85);
-      cursor:pointer;font-size:.9rem;font-weight:500;
-      transition:all .2s ease;margin-bottom:2px;
-    }
-    .menu-item i{width:18px;text-align:center;font-size:.95rem;}
-    .menu-item:hover{
-      background:rgba(255,255,255,0.08);color:#fff;
-      transform:translateX(2px);
-    }
-    .menu-item.active{
-      background:linear-gradient(135deg,rgba(212,175,55,0.25),rgba(212,175,55,0.10));
-      color:var(--gold-2);
-      border:1px solid rgba(212,175,55,0.35);
-    }
+.stat-card{ padding:20px; }
+.stat-card .icon-badge{ width:46px; height:46px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.1rem; color:#fff;}
+.stat-num{ font-size:1.7rem; font-weight:800; }
+.progress{ height:8px; border-radius:6px; background:rgba(0,0,0,.06); }
+.progress-bar{ border-radius:6px; }
 
-    .main-area{
-      flex:1;margin-left:260px;
-      padding:1rem 1.25rem 2rem;
-      min-width:0;
-    }
-    .topbar{
-      display:flex;align-items:center;justify-content:space-between;
-      padding:.85rem 1.25rem;margin-bottom:1.25rem;
-      position:sticky;top:.5rem;z-index:1020;
-    }
-    .topbar-left{display:flex;align-items:center;gap:.75rem;}
-    .topbar-title{font-size:1.15rem;font-weight:700;}
-    .btn-burger{
-      display:none;background:transparent;border:none;color:#fff;font-size:1.3rem;
-    }
-    .user-chip{
-      display:flex;align-items:center;gap:.65rem;
-      padding:.4rem .65rem .4rem .4rem;border-radius:30px;
-      background:rgba(255,255,255,0.08);cursor:pointer;
-    }
-    .user-avatar{
-      width:36px;height:36px;border-radius:50%;overflow:hidden;
-      background:linear-gradient(135deg,var(--gold-1),var(--gold-2));
-      display:flex;align-items:center;justify-content:center;flex-shrink:0;
-    }
-    .user-avatar img{width:100%;height:100%;object-fit:cover;}
-    .user-avatar i{color:#1a1a2e;font-size:.95rem;}
-    .user-name{font-size:.85rem;font-weight:600;line-height:1;}
-    .user-role{font-size:.7rem;color:rgba(245,245,247,0.6);}
+.card-section{ padding:20px; margin-bottom:18px; }
+.table thead th{ font-size:.75rem; text-transform:uppercase; color:var(--muted); border-bottom:2px solid rgba(0,0,0,.06); }
+.table td, .table th{ vertical-align:middle; }
+.badge-status{ padding:5px 10px; border-radius:8px; font-weight:600; font-size:.72rem; }
+.btn-soft{ border-radius:10px; border:1px solid rgba(0,0,0,.08); background:rgba(255,255,255,.6); }
+.section-title{ font-weight:700; font-size:1.05rem; margin-bottom:2px;}
+.section-sub{ color:var(--muted); font-size:.85rem;}
 
-    .content-card{padding:1.5rem;margin-bottom:1.25rem;}
-    .page-title{font-family:'Playfair Display',serif;font-size:1.45rem;font-weight:600;margin-bottom:.15rem;}
-    .page-subtitle{font-size:.85rem;color:rgba(245,245,247,0.65);margin-bottom:1.25rem;}
-
-    /* Stat cards */
-    .stat-card{
-      padding:1.25rem;border-radius:18px;
-      background:linear-gradient(135deg,rgba(255,255,255,0.12),rgba(255,255,255,0.05));
-      border:1px solid rgba(255,255,255,0.18);
-      backdrop-filter:blur(20px);
-      transition:all .25s ease;
-    }
-    .stat-card:hover{transform:translateY(-3px);box-shadow:0 10px 30px rgba(0,0,0,0.25);}
-    .stat-icon{
-      width:46px;height:46px;border-radius:12px;
-      display:flex;align-items:center;justify-content:center;font-size:1.2rem;
-    }
-    .stat-value{font-size:1.85rem;font-weight:700;line-height:1;margin-top:.5rem;}
-    .stat-label{font-size:.78rem;color:rgba(245,245,247,0.7);margin-top:.2rem;}
-
-    /* Table */
-    .table-glass{color:#f5f5f7;}
-    .table-glass thead th{
-      background:rgba(212,175,55,0.18);
-      color:var(--gold-2);
-      border:none;font-size:.78rem;text-transform:uppercase;letter-spacing:.05em;
-      padding:.7rem;
-    }
-    .table-glass tbody td{
-      border-color:rgba(255,255,255,0.07);
-      padding:.65rem .7rem;font-size:.86rem;vertical-align:middle;
-    }
-    .table-glass tbody tr:hover{background:rgba(255,255,255,0.05);}
-
-    .badge-status{font-size:.7rem;padding:.35em .6em;border-radius:6px;font-weight:600;}
-    .badge-pending{background:rgba(255,193,7,0.20);color:#ffd43b;}
-    .badge-approved{background:rgba(40,167,69,0.20);color:#51cf66;}
-    .badge-revisi{background:rgba(255,140,0,0.20);color:#ffa94d;}
-    .badge-rejected{background:rgba(220,53,69,0.20);color:#ff6b6b;}
-
-    /* Sidebar overlay (mobile) */
-    .sidebar-overlay{
-      display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);
-      z-index:1035;backdrop-filter:blur(2px);
-    }
-    .sidebar-overlay.show{display:block;}
-
-    /* Progress bar kelengkapan */
-    .progress-glass{
-      height:8px;background:rgba(255,255,255,0.10);border-radius:6px;overflow:hidden;
-    }
-    .progress-glass .bar{
-      height:100%;background:linear-gradient(90deg,var(--gold-1),var(--gold-2));
-      border-radius:6px;transition:width .6s ease;
-    }
-
-    /* Modal glass */
-    .modal-content.glass-modal{
-      background:rgba(30,32,52,0.92);
-      backdrop-filter:blur(28px);
-      border:1px solid rgba(255,255,255,0.18);
-      color:#f5f5f7;border-radius:18px;
-    }
-    .modal-content.glass-modal .modal-header{border-bottom:1px solid rgba(255,255,255,0.10);}
-    .modal-content.glass-modal .modal-footer{border-top:1px solid rgba(255,255,255,0.10);}
-    .modal-content.glass-modal .btn-close{filter:invert(1) grayscale(1) brightness(2);}
-
-    /* Toast */
-    .toast-container{position:fixed;top:1rem;right:1rem;z-index:2000;}
-    .toast-glass{
-      background:rgba(30,32,52,0.92);backdrop-filter:blur(20px);
-      border:1px solid rgba(255,255,255,0.18);color:#f5f5f7;border-radius:12px;
-    }
-
-    /* Scrollbar */
-    ::-webkit-scrollbar{width:8px;height:8px;}
-    ::-webkit-scrollbar-track{background:transparent;}
-    ::-webkit-scrollbar-thumb{background:rgba(212,175,55,0.35);border-radius:4px;}
-    ::-webkit-scrollbar-thumb:hover{background:rgba(212,175,55,0.55);}
-
-    /* Responsive */
-    @media (max-width: 991.98px){
-      .sidebar{transform:translateX(-100%);}
-      .sidebar.show{transform:translateX(0);}
-      .main-area{margin-left:0;}
-      .btn-burger{display:block;}
-    }
-    @media (max-width: 575.98px){
-      .main-area{padding:.75rem .9rem 2rem;}
-      .topbar-title{font-size:1rem;}
-      .stat-value{font-size:1.5rem;}
-      .content-card{padding:1rem;}
-    }
-    .empty-state{
-      text-align:center;padding:2.5rem 1rem;color:rgba(245,245,247,0.6);
-    }
-    .empty-state i{font-size:2.5rem;color:rgba(212,175,55,0.55);margin-bottom:.75rem;}
-
-    /* Loading overlay */
-    .loading-overlay{
-      position:fixed;inset:0;background:rgba(15,23,42,0.7);
-      display:none;align-items:center;justify-content:center;z-index:3000;
-      backdrop-filter:blur(4px);
-    }
-    .loading-overlay.show{display:flex;}
-    .spinner-gold{
-      width:50px;height:50px;border-radius:50%;
-      border:4px solid rgba(212,175,55,0.25);
-      border-top-color:var(--gold-1);
-      animation:spin 0.8s linear infinite;
-    }
-    @keyframes spin{to{transform:rotate(360deg);}}
-  </style>
+@media (max-width: 991.98px){
+  .sidebar{ transform: translateX(-100%); }
+  .sidebar.show{ transform: translateX(0); }
+  .main-wrap{ margin-left:0; padding:14px; }
+  .burger{ display:inline-flex; }
+}
+.spinner-overlay{ position:fixed; inset:0; background:rgba(255,255,255,.55); backdrop-filter:blur(3px); z-index:2000; display:none; align-items:center; justify-content:center;}
+.toast-container{ z-index:3000; }
+.upload-drop{ border:2px dashed rgba(0,0,0,.15); border-radius:14px; padding:22px; text-align:center; cursor:pointer; background:rgba(255,255,255,.4);}
+.upload-drop:hover{ border-color:var(--accent); }
+.chip{ display:inline-block; padding:3px 10px; border-radius:20px; font-size:.72rem; font-weight:600;}
+</style>
 </head>
 <body>
 
-  <!-- ================= LOGIN SCREEN ================= -->
-  <div id="loginScreen">
-    <div class="glass-strong login-card">
-      <div class="login-logo" id="loginLogo">
-        <i class="fas fa-graduation-cap"></i>
-      </div>
-      <h3 class="text-center display-font gold-text mb-1">Sistem Administrasi Guru</h3>
-      <p class="text-center" style="color:rgba(245,245,247,0.65);font-size:.85rem;margin-bottom:1.75rem;">
-        Silakan masuk untuk melanjutkan
-      </p>
-      <form id="loginForm">
-        <div class="mb-3">
-          <label class="form-label-glass">Username</label>
-          <div class="input-group">
-            <span class="input-group-text bg-transparent border-end-0" style="border:1px solid rgba(255,255,255,0.2);border-right:none;color:var(--gold-2);">
-              <i class="fas fa-user"></i>
-            </span>
-            <input type="text" class="form-control form-control-glass border-start-0" id="loginUsername" placeholder="username" required style="border-left:none;" />
-          </div>
-        </div>
-        <div class="mb-3">
-          <label class="form-label-glass">Password</label>
-          <div class="input-group">
-            <span class="input-group-text bg-transparent" style="border:1px solid rgba(255,255,255,0.2);border-right:none;color:var(--gold-2);">
-              <i class="fas fa-lock"></i>
-            </span>
-            <input type="password" class="form-control form-control-glass" id="loginPassword" placeholder="•••••••" required style="border-left:none;" />
-            <button class="btn btn-outline-secondary" type="button" id="togglePwd" style="border-color:rgba(255,255,255,0.2);color:var(--gold-2);">
-              <i class="fas fa-eye"></i>
-            </button>
-          </div>
-        </div>
-        <button type="submit" class="btn btn-gold w-100 py-2 mt-2" id="btnLogin">
-          <i class="fas fa-sign-in-alt me-2"></i>Masuk
-        </button>
-      </form>
-      <div class="text-center mt-3" style="font-size:.78rem;color:rgba(245,245,247,0.55);">
-        Demo: admin/admin123 &middot; guru1/guru123
+<!-- ============ LOADING ============ -->
+<div class="spinner-overlay" id="spinnerOverlay">
+  <div class="spinner-border" style="color:var(--accent); width:3rem; height:3rem;" role="status"></div>
+</div>
+<div class="toast-container position-fixed top-0 end-0 p-3" id="toastContainer"></div>
+
+<!-- ============ LOGIN SCREEN ============ -->
+<div id="loginScreen">
+  <div class="glass login-card text-center">
+    <img id="loginLogo" src="https://placehold.co/64x64?text=Logo" class="login-logo mb-3" alt="Logo">
+    <h5 class="fw-bold mb-0" id="loginSchoolName">Sistem Administrasi Guru</h5>
+    <p class="section-sub mb-4">Silakan masuk untuk melanjutkan</p>
+    <form id="formLogin" class="text-start">
+      <label class="form-label small fw-semibold">Username</label>
+      <input type="text" class="form-control mb-3" id="loginUsername" required autocomplete="username">
+      <label class="form-label small fw-semibold">Password</label>
+      <input type="password" class="form-control mb-3" id="loginPassword" required autocomplete="current-password">
+      <button type="submit" class="btn btn-accent w-100 mt-2"><i class="fa-solid fa-right-to-bracket me-1"></i> Masuk</button>
+      <div class="text-danger small mt-2" id="loginError"></div>
+    </form>
+  </div>
+</div>
+
+<!-- ============ APP SCREEN ============ -->
+<div id="appScreen">
+  <div id="sidebarOverlay" onclick="toggleSidebar(false)"></div>
+
+  <nav class="sidebar glass" id="sidebar">
+    <div class="sidebar-brand">
+      <img id="sbLogo" src="https://placehold.co/38x38" alt="logo">
+      <div>
+        <div class="fw-bold small" id="sbSchoolName">Sekolah</div>
+        <div class="section-sub" style="font-size:.72rem;" id="sbTapel">Tahun Ajaran</div>
       </div>
     </div>
-  </div>
 
-  <!-- ================= APP SCREEN ================= -->
-  <div id="appScreen">
-    <div class="layout">
-      <!-- Sidebar Overlay (mobile) -->
-      <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar(false)"></div>
+    <div id="navMenu"></div>
+  </nav>
 
-      <!-- Sidebar -->
-      <aside class="sidebar glass" id="sidebar">
-        <div class="brand">
-          <div class="brand-logo" id="brandLogo">
-            <i class="fas fa-graduation-cap"></i>
-          </div>
-          <div>
-            <div class="brand-name" id="brandSchoolName">Sistem Administrasi</div>
-            <div class="brand-sub">Guru Digital</div>
-          </div>
+  <div class="main-wrap" id="mainWrap">
+    <div class="topbar glass">
+      <div class="d-flex align-items-center gap-2">
+        <button class="btn burger btn-soft" onclick="toggleSidebar(true)"><i class="fa-solid fa-bars"></i></button>
+        <div>
+          <div class="fw-bold" id="pageTitle">Dashboard</div>
+          <div class="section-sub" id="pageSub">Ringkasan sistem</div>
         </div>
-
-        <div class="menu-group-label">Utama</div>
-        <div class="menu-item active" data-view="dashboard" onclick="navigate('dashboard')">
-          <i class="fas fa-chart-pie"></i><span>Dashboard</span>
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <img class="avatar" id="topAvatar" src="https://placehold.co/40x40" alt="avatar">
+        <div class="d-none d-sm-block me-2">
+          <div class="fw-semibold small" id="topUserName">-</div>
+          <div class="section-sub" style="font-size:.72rem;" id="topUserRole">-</div>
         </div>
-
-        <!-- MENU GURU -->
-        <div class="menu-group-label">Menu Guru</div>
-        <div class="menu-item" data-view="absensi" onclick="navigate('absensi')">
-          <i class="fas fa-user-check"></i><span>Input Absensi</span>
-        </div>
-        <div class="menu-item" data-view="nilai" onclick="navigate('nilai')">
-          <i class="fas fa-clipboard-list"></i><span>Input Penilaian</span>
-        </div>
-        <div class="menu-item" data-view="jadwal" onclick="navigate('jadwal')">
-          <i class="fas fa-calendar-alt"></i><span>Jadwal Mengajar</span>
-        </div>
-        <div class="menu-item" data-view="agenda" onclick="navigate('agenda')">
-          <i class="fas fa-book-open"></i><span>Jurnal Agenda</span>
-        </div>
-        <div class="menu-item" data-view="bimbingan" onclick="navigate('bimbingan')">
-          <i class="fas fa-hands-helping"></i><span>Bimbingan Wali</span>
-        </div>
-        <div class="menu-item" data-view="eperangkat" onclick="navigate('eperangkat')">
-          <i class="fas fa-folder-open"></i><span>E-Perangkat Ajar</span>
-        </div>
-        <div class="menu-item" data-view="panduan" onclick="navigate('panduan')">
-          <i class="fas fa-book"></i><span>Panduan Mengajar</span>
-        </div>
-
-        <!-- MENU ADMIN (hanya tampil jika admin) -->
-        <div id="adminMenu" style="display:none;">
-          <div class="menu-group-label">Menu Admin</div>
-          <div class="menu-item" data-view="rekapwali" onclick="navigate('rekapwali')">
-            <i class="fas fa-users-cog"></i><span>Rekap Guru Wali</span>
-          </div>
-          <div class="menu-item" data-view="users" onclick="navigate('users')">
-            <i class="fas fa-user-shield"></i><span>Manajemen User</span>
-          </div>
-          <div class="menu-item" data-view="importsiswa" onclick="navigate('importsiswa')">
-            <i class="fas fa-file-import"></i><span>Import Siswa Massal</span>
-          </div>
-          <div class="menu-item" data-view="validasi" onclick="navigate('validasi')">
-            <i class="fas fa-tasks"></i><span>Validasi & Monitoring</span>
-          </div>
-          <div class="menu-item" data-view="config" onclick="navigate('config')">
-            <i class="fas fa-cog"></i><span>Konfigurasi Sekolah</span>
-          </div>
-        </div>
-
-        <div class="menu-group-label">Akun</div>
-        <div class="menu-item" data-view="profile" onclick="navigate('profile')">
-          <i class="fas fa-id-badge"></i><span>Profil Saya</span>
-        </div>
-        <div class="menu-item" onclick="logout()" style="color:#ff8585;">
-          <i class="fas fa-sign-out-alt"></i><span>Keluar</span>
-        </div>
-      </aside>
-
-      <!-- Main -->
-      <div class="main-area">
-        <div class="topbar glass">
-          <div class="topbar-left">
-            <button class="btn-burger" onclick="toggleSidebar(true)">
-              <i class="fas fa-bars"></i>
-            </button>
-            <div>
-              <div class="topbar-title" id="topbarTitle">Dashboard</div>
-              <div style="font-size:.72rem;color:rgba(245,245,247,0.55);" id="topbarSubtitle">
-                <span id="currentDate"></span>
-              </div>
-            </div>
-          </div>
-          <div class="d-flex align-items-center gap-2">
-            <button class="btn btn-sm btn-platinum" onclick="refreshCurrentView()">
-              <i class="fas fa-sync-alt"></i>
-            </button>
-            <div class="user-chip" onclick="navigate('profile')">
-              <div class="user-avatar" id="topbarAvatar">
-                <i class="fas fa-user"></i>
-              </div>
-              <div class="d-none d-sm-block">
-                <div class="user-name" id="topbarUserName">User</div>
-                <div class="user-role" id="topbarUserRole">role</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- View container -->
-        <div id="viewContainer"></div>
+        <button class="btn btn-soft btn-sm" onclick="logout()"><i class="fa-solid fa-power-off"></i></button>
       </div>
     </div>
+
+    <div id="pageContent"></div>
   </div>
+</div>
 
-  <!-- Toast container -->
-  <div class="toast-container" id="toastContainer"></div>
+<script>
+/*************************************************************
+ * KONFIGURASI API
+ *************************************************************/
+const API_URL = "https://script.google.com/macros/s/AKfycbzxGDSOO9XqZFoyUWXthC6-xd3oqcSOswlBZflvcnVkzPGJ8DDWouSGAO5uoL_NilkAjQ/exec"; // <-- Ganti dengan URL Web App hasil deploy Kode.gs
 
-  <!-- Loading overlay -->
-  <div class="loading-overlay" id="loadingOverlay">
-    <div class="text-center">
-      <div class="spinner-gold mx-auto"></div>
-      <div class="mt-2" style="color:var(--gold-2);font-size:.85rem;" id="loadingText">Memuat...</div>
-    </div>
-  </div>
+let STATE = {
+  token: localStorage.getItem('sag_token') || null,
+  user: JSON.parse(localStorage.getItem('sag_user') || 'null'),
+  config: {},
+  currentPage: 'dashboard'
+};
 
-  <!-- ================= MODAL CONTAINER ================= -->
-  <div class="modal fade" id="appModal" tabindex="-1">
-    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-      <div class="modal-content glass-modal">
-        <div class="modal-header">
-          <h5 class="modal-title" id="appModalTitle">Modal</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body" id="appModalBody"></div>
-        <div class="modal-footer" id="appModalFooter"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Hidden barcode canvas for PDF generation -->
-  <canvas id="barcodeCanvas" style="display:none;"></canvas>
-
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
-  <script>
-  /* ============================================================
-     KONFIGURASI & STATE
-     ============================================================ */
-  const API_URL = 'https://script.google.com/macros/s/AKfycbwJqppV9uC0qtNeSkS7N-TIkPgf8HQSsz5kCh_mVxcHSyzv7mnVqBKX33G7KZTgXi5UqA/exec';
-  let STATE = {
-    token: null,
-    user: null,
-    config: {},
-    currentView: 'dashboard',
-    cache: {} // cache untuk data dropdown
-  };
-
-  /* ============================================================
-     UTILITY: FETCH API (text/plain untuk bypass CORS preflight)
-     ============================================================ */
-  async function api(action, data = {}) {
-    try {
-      const res = await fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ action, token: STATE.token, data })
-      });
-      const json = await res.json();
-      return json;
-    } catch (err) {
-      console.error('API error:', err);
-      return { success: false, error: 'Koneksi gagal: ' + err.message };
+/*************************************************************
+ * HTTP HELPER
+ *************************************************************/
+async function apiCall(action, payload = {}, method = 'POST') {
+  showSpinner(true);
+  try {
+    const body = Object.assign({ action, token: STATE.token }, payload);
+    const res = await fetch(API_URL, {
+      method: 'POST', // GAS doPost menangani semua; method GET juga didukung via query jika perlu
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // hindari preflight CORS
+      body: JSON.stringify(body)
+    });
+    const json = await res.json();
+    if (!json.success) {
+      showToast(json.message || 'Terjadi kesalahan.', 'danger');
     }
+    return json;
+  } catch (err) {
+    showToast('Gagal terhubung ke server: ' + err.message, 'danger');
+    return { success: false, message: err.message };
+  } finally {
+    showSpinner(false);
   }
+}
 
-  /* ============================================================
-     UTILITAS UI
-     ============================================================ */
-  function showToast(message, type = 'info') {
-    const colors = { info:'#0dcaf0', success:'#28a745', danger:'#dc3545', warning:'#ffc107' };
-    const icons  = { info:'fa-info-circle', success:'fa-check-circle', danger:'fa-times-circle', warning:'fa-exclamation-triangle' };
-    const c = colors[type] || colors.info;
-    const i = icons[type] || icons.info;
-    const el = document.createElement('div');
-    el.className = 'toast toast-glass show';
-    el.style.minWidth = '260px';
-    el.innerHTML = `
-      <div class="d-flex align-items-center p-3">
-        <i class="fas ${i} me-3" style="color:${c};font-size:1.1rem;"></i>
-        <div class="flex-grow-1" style="font-size:.86rem;">${message}</div>
-        <button type="button" class="btn-close btn-close-white ms-2" onclick="this.parentElement.parentElement.remove()"></button>
-      </div>`;
-    document.getElementById('toastContainer').appendChild(el);
-    setTimeout(() => el.remove(), 4500);
+function showSpinner(show) {
+  document.getElementById('spinnerOverlay').style.display = show ? 'flex' : 'none';
+}
+function showToast(msg, type = 'primary') {
+  const id = 't' + Date.now();
+  const html = `<div id="${id}" class="toast align-items-center text-bg-${type} border-0" role="alert">
+    <div class="d-flex"><div class="toast-body">${msg}</div>
+    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div></div>`;
+  document.getElementById('toastContainer').insertAdjacentHTML('beforeend', html);
+  const el = new bootstrap.Toast(document.getElementById(id), { delay: 3500 });
+  el.show();
+}
+
+/*************************************************************
+ * AUTH
+ *************************************************************/
+document.getElementById('formLogin').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  document.getElementById('loginError').textContent = '';
+  const username = document.getElementById('loginUsername').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const res = await apiCall('login', { username, password });
+  if (res.success) {
+    STATE.token = res.token; STATE.user = res.user;
+    localStorage.setItem('sag_token', res.token);
+    localStorage.setItem('sag_user', JSON.stringify(res.user));
+    await bootApp();
+  } else {
+    document.getElementById('loginError').textContent = res.message;
   }
+});
 
-  function showLoading(text = 'Memuat...') {
-    document.getElementById('loadingText').textContent = text;
-    document.getElementById('loadingOverlay').classList.add('show');
+function logout() {
+  localStorage.removeItem('sag_token'); localStorage.removeItem('sag_user');
+  STATE.token = null; STATE.user = null;
+  document.getElementById('appScreen').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+}
+
+async function loadConfig() {
+  const res = await apiCall('getAll', { table: 'Config' });
+  if (res.success) {
+    const cfg = {};
+    res.data.forEach(r => cfg[r.key] = r.value);
+    STATE.config = cfg;
+    const logo = cfg.logoUrl || 'https://placehold.co/64x64?text=Logo';
+    document.getElementById('loginLogo').src = logo;
+    document.getElementById('loginSchoolName').textContent = cfg.namaSekolah || 'Sistem Administrasi Guru';
+    document.getElementById('sbLogo').src = logo;
+    document.getElementById('sbSchoolName').textContent = cfg.namaSekolah || '-';
+    document.getElementById('sbTapel').textContent = (cfg.tapelAktif || '-') + ' • ' + (cfg.semesterAktif || '-');
   }
-  function hideLoading() {
-    document.getElementById('loadingOverlay').classList.remove('show');
-  }
+}
 
-  function escapeHtml(str) {
-    if (str === null || str === undefined) return '';
-    return String(str).replace(/[&<>"']/g, m => ({
-      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
-    })[m]);
-  }
-
-  function formatDate(d) {
-    if (!d) return '-';
-    try {
-      const dt = new Date(d);
-      if (isNaN(dt)) return d;
-      return dt.toLocaleDateString('id-ID', { day:'2-digit', month:'long', year:'numeric' });
-    } catch(e){ return d; }
-  }
-  function todayStr() {
-    const d = new Date();
-    const mm = String(d.getMonth()+1).padStart(2,'0');
-    const dd = String(d.getDate()).padStart(2,'0');
-    return `${d.getFullYear()}-${mm}-${dd}`;
-  }
-
-  /* ============================================================
-     LOGIN
-     ============================================================ */
-  document.getElementById('loginForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const username = document.getElementById('loginUsername').value.trim();
-    const password = document.getElementById('loginPassword').value;
-    if (!username || !password) return;
-    showLoading('Memverifikasi...');
-    const res = await api('login', { username, password });
-    hideLoading();
-    if (res.success) {
-      STATE.token = res.token;
-      STATE.user  = res.user;
-      localStorage.setItem('sag_token', res.token);
-      localStorage.setItem('sag_user', JSON.stringify(res.user));
-      await loadConfig();
-      enterApp();
-      showToast('Selamat datang, ' + res.user.nama, 'success');
-    } else {
-      showToast(res.error || 'Login gagal', 'danger');
-    }
-  });
-
-  document.getElementById('togglePwd').addEventListener('click', () => {
-    const pwd = document.getElementById('loginPassword');
-    pwd.type = pwd.type === 'password' ? 'text' : 'password';
-  });
-
-  /* ============================================================
-     CONFIG & APP ENTRY
-     ============================================================ */
-  async function loadConfig() {
-    const res = await api('getConfig');
-    if (res.success) {
-      STATE.config = res.data;
-      // update logo
-      const logoUrl = res.data.logo_url;
-      if (logoUrl) {
-        const loginLogo = document.getElementById('loginLogo');
-        loginLogo.innerHTML = `<img src="${logoUrl}" alt="logo" onerror="this.parentElement.innerHTML='<i class=\\'fas fa-graduation-cap\\'></i>'" />`;
-        const brandLogo = document.getElementById('brandLogo');
-        brandLogo.innerHTML = `<img src="${logoUrl}" alt="logo" onerror="this.parentElement.innerHTML='<i class=\\'fas fa-graduation-cap\\'></i>'" />`;
-        const topAvatar = document.getElementById('topbarAvatar');
-        topAvatar.innerHTML = `<img src="${logoUrl}" alt="avatar" onerror="this.parentElement.innerHTML='<i class=\\'fas fa-user\\'></i>'" />`;
-      }
-      document.getElementById('brandSchoolName').textContent = res.data.nama_sekolah || 'Sistem Administrasi Guru';
-    }
-  }
-
-  function enterApp() {
+/*************************************************************
+ * BOOT
+ *************************************************************/
+window.addEventListener('DOMContentLoaded', async () => {
+  if (STATE.token && STATE.user) {
     document.getElementById('loginScreen').style.display = 'none';
-    document.getElementById('appScreen').style.display = 'block';
-    document.getElementById('topbarUserName').textContent = STATE.user.nama;
-    document.getElementById('topbarUserRole').textContent = STATE.user.role === 'admin' ? 'Administrator' : 'Guru';
-    // tampilkan menu admin
-    document.getElementById('adminMenu').style.display = STATE.user.role === 'admin' ? 'block' : 'none';
-    // tanggal
-    document.getElementById('currentDate').textContent = new Date().toLocaleDateString('id-ID', {
-      weekday:'long', day:'2-digit', month:'long', year:'numeric'
+    await bootApp();
+  }
+});
+
+async function bootApp() {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('appScreen').style.display = 'block';
+  await loadConfig();
+
+  document.getElementById('topAvatar').src = STATE.config.logoUrl || 'https://placehold.co/40x40';
+  document.getElementById('topUserName').textContent = STATE.user.nama;
+  document.getElementById('topUserRole').textContent = STATE.user.role;
+
+  renderMenu();
+  navigate('dashboard');
+}
+
+/*************************************************************
+ * SIDEBAR / MENU
+ *************************************************************/
+const MENU_GURU = [
+  { section: 'Menu Guru' },
+  { id: 'dashboard', label: 'Dashboard', icon: 'fa-gauge-high' },
+  { id: 'absensi', label: 'Input Absensi', icon: 'fa-clipboard-check' },
+  { id: 'nilai', label: 'Input Penilaian', icon: 'fa-marker' },
+  { id: 'jadwal', label: 'Jadwal Mengajar', icon: 'fa-calendar-days' },
+  { id: 'agenda', label: 'Jurnal Agenda', icon: 'fa-book-open' },
+  { id: 'bimbingan', label: 'Bimbingan Wali', icon: 'fa-hands-holding-child' },
+  { id: 'perangkat', label: 'E-Perangkat Ajar', icon: 'fa-file-arrow-up' },
+  { id: 'panduan', label: 'Panduan Mengajar', icon: 'fa-book' },
+];
+const MENU_ADMIN = [
+  { section: 'Menu Admin' },
+  { id: 'rekapWali', label: 'Rekap Guru Wali', icon: 'fa-people-roof' },
+  { id: 'userManagement', label: 'Manajemen User', icon: 'fa-users-gear' },
+  { id: 'importSiswa', label: 'Import Siswa Massal', icon: 'fa-file-import' },
+  { id: 'konfigurasi', label: 'Konfigurasi Sekolah', icon: 'fa-gear' },
+  { id: 'monitoringPerangkat', label: 'Validasi & Monitoring', icon: 'fa-clipboard-list' },
+];
+
+function renderMenu() {
+  const isAdmin = STATE.user.role === 'Admin';
+  let items = MENU_GURU.slice();
+  if (isAdmin) items = items.concat(MENU_ADMIN);
+
+  let html = '';
+  items.forEach(item => {
+    if (item.section) { html += `<div class="nav-section">${item.section}</div>`; return; }
+    html += `<div class="nav-link-app" data-page="${item.id}" onclick="navigate('${item.id}')">
+      <i class="fa-solid ${item.icon}"></i><span>${item.label}</span></div>`;
+  });
+  document.getElementById('navMenu').innerHTML = html;
+}
+
+function toggleSidebar(show) {
+  document.getElementById('sidebar').classList.toggle('show', show);
+  document.getElementById('sidebarOverlay').style.display = show ? 'block' : 'none';
+}
+
+const PAGE_TITLES = {
+  dashboard: ['Dashboard', 'Ringkasan sistem administrasi'],
+  absensi: ['Input Absensi', 'Catat kehadiran siswa per kelas'],
+  nilai: ['Input Penilaian', 'Leger nilai dinamis & riwayat'],
+  jadwal: ['Jadwal Mengajar', 'Jadwal mengajar mingguan'],
+  agenda: ['Jurnal Agenda', 'Catatan kegiatan pembelajaran harian'],
+  bimbingan: ['Bimbingan Wali', 'Catatan bimbingan siswa'],
+  perangkat: ['E-Perangkat Ajar', 'Upload & kelola perangkat ajar'],
+  panduan: ['Panduan Mengajar', 'Repositori buku & regulasi'],
+  rekapWali: ['Rekap Guru Wali', 'Rekapitulasi wali kelas'],
+  userManagement: ['Manajemen User', 'Tambah / hapus pengguna'],
+  importSiswa: ['Import Siswa Massal', 'Import data siswa via CSV'],
+  konfigurasi: ['Konfigurasi Sekolah', 'Identitas & pengaturan sekolah'],
+  monitoringPerangkat: ['Validasi & Monitoring', 'Supervisi kelengkapan administrasi guru'],
+};
+
+async function navigate(page) {
+  STATE.currentPage = page;
+  document.querySelectorAll('.nav-link-app').forEach(el => el.classList.toggle('active', el.dataset.page === page));
+  document.getElementById('pageTitle').textContent = PAGE_TITLES[page][0];
+  document.getElementById('pageSub').textContent = PAGE_TITLES[page][1];
+  toggleSidebar(false);
+
+  const renderers = {
+    dashboard: renderDashboard,
+    absensi: renderAbsensi,
+    nilai: renderNilai,
+    jadwal: renderGenericTable.bind(null, 'JadwalMengajar', jadwalColumns()),
+    agenda: renderGenericTable.bind(null, 'Agenda', agendaColumns()),
+    bimbingan: renderGenericTable.bind(null, 'BimbinganWali', bimbinganColumns()),
+    perangkat: renderPerangkat,
+    panduan: renderPanduan,
+    rekapWali: renderRekapWali,
+    userManagement: renderUserManagement,
+    importSiswa: renderImportSiswa,
+    konfigurasi: renderKonfigurasi,
+    monitoringPerangkat: renderMonitoringPerangkat,
+  };
+  document.getElementById('pageContent').innerHTML = '<div class="text-center py-5 section-sub">Memuat...</div>';
+  if (renderers[page]) await renderers[page]();
+}
+
+/*************************************************************
+ * DASHBOARD
+ *************************************************************/
+async function renderDashboard() {
+  const res = await apiCall('getDashboard');
+  if (!res.success) return;
+  const d = res.data;
+  let barsHtml = d.kelengkapanPerGuru.map(g => `
+    <div class="mb-3">
+      <div class="d-flex justify-content-between small mb-1">
+        <span class="fw-semibold">${g.nama}</span><span class="text-muted">${g.terisi}/${g.total} (${g.persentase}%)</span>
+      </div>
+      <div class="progress"><div class="progress-bar" style="width:${g.persentase}%; background:${g.persentase>=80?'var(--success)':g.persentase>=50?'var(--warn)':'var(--danger)'}"></div></div>
+    </div>`).join('') || '<p class="section-sub">Belum ada data guru.</p>';
+
+  document.getElementById('pageContent').innerHTML = `
+    <div class="row g-3 mb-3">
+      ${statCard('Jumlah Rombel', d.jumlahRombel, 'fa-chalkboard', 'linear-gradient(135deg,#3a5aff,#7b3aff)')}
+      ${statCard('Jumlah Guru', d.jumlahGuru, 'fa-chalkboard-user', 'linear-gradient(135deg,#12b76a,#0891b2)')}
+      ${statCard('Jumlah Siswa', d.jumlahSiswa, 'fa-user-graduate', 'linear-gradient(135deg,#f79009,#f04438)')}
+      ${statCard('Rata-Rata Kelengkapan', d.rataRataKelengkapan + '%', 'fa-clipboard-check', 'linear-gradient(135deg,#7b3aff,#f04438)')}
+    </div>
+    <div class="glass card-section">
+      <div class="section-title mb-3"><i class="fa-solid fa-chart-simple me-1"></i> Kelengkapan Perangkat Ajar per Guru</div>
+      ${barsHtml}
+    </div>`;
+}
+function statCard(label, val, icon, grad) {
+  return `<div class="col-6 col-lg-3"><div class="glass stat-card">
+    <div class="icon-badge mb-2" style="background:${grad}"><i class="fa-solid ${icon}"></i></div>
+    <div class="stat-num">${val}</div><div class="section-sub">${label}</div>
+  </div></div>`;
+}
+
+/*************************************************************
+ * GENERIC TABLE RENDERER (untuk Jadwal, Agenda, Bimbingan, dll)
+ *************************************************************/
+function jadwalColumns(){ return [
+  {key:'hari', label:'Hari'}, {key:'jamKe', label:'Jam Ke'}, {key:'jamMulai', label:'Mulai'},
+  {key:'jamSelesai', label:'Selesai'}, {key:'kelasId', label:'Kelas'}, {key:'mapelId', label:'Mapel'}
+];}
+function agendaColumns(){ return [
+  {key:'tanggal', label:'Tanggal'}, {key:'kelasId', label:'Kelas'}, {key:'mapelId', label:'Mapel'},
+  {key:'jamKe', label:'Jam Ke'}, {key:'materi', label:'Materi'}, {key:'kegiatan', label:'Kegiatan'}
+];}
+function bimbinganColumns(){ return [
+  {key:'tanggal', label:'Tanggal'}, {key:'siswaId', label:'Siswa'}, {key:'kategori', label:'Kategori'},
+  {key:'catatan', label:'Catatan'}, {key:'tindakLanjut', label:'Tindak Lanjut'}
+];}
+
+async function renderGenericTable(table, columns) {
+  const isGuru = STATE.user.role === 'Guru';
+  const filter = isGuru ? { filterField: 'guruId', filterValue: STATE.user.id } : {};
+  const res = await apiCall('getAll', Object.assign({ table }, filter));
+  const rows = res.success ? res.data : [];
+
+  const theadHtml = columns.map(c => `<th>${c.label}</th>`).join('') + '<th></th>';
+  const tbodyHtml = rows.map(r => `<tr>${columns.map(c => `<td>${r[c.key] ?? '-'}</td>`).join('')}
+    <td class="text-end"><button class="btn btn-sm btn-soft" onclick='openForm("${table}", ${JSON.stringify(columns).replace(/'/g,"&#39;")}, ${JSON.stringify(r).replace(/'/g,"&#39;")})'><i class="fa-solid fa-pen"></i></button>
+    <button class="btn btn-sm btn-soft text-danger" onclick="deleteRow('${table}','${r.id}')"><i class="fa-solid fa-trash"></i></button></td></tr>`).join('')
+    || `<tr><td colspan="${columns.length+1}" class="text-center section-sub py-4">Belum ada data.</td></tr>`;
+
+  document.getElementById('pageContent').innerHTML = `
+    <div class="glass card-section">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="section-title">Data ${table}</div>
+        <button class="btn btn-accent btn-sm" onclick='openForm("${table}", ${JSON.stringify(columns).replace(/'/g,"&#39;")}, null)'><i class="fa-solid fa-plus me-1"></i>Tambah</button>
+      </div>
+      <div class="table-responsive"><table class="table align-middle">
+        <thead><tr>${theadHtml}</tr></thead><tbody>${tbodyHtml}</tbody>
+      </table></div>
+    </div>`;
+}
+
+function openForm(table, columns, existing) {
+  const isEdit = !!existing;
+  const fields = columns.map(c => `
+    <div class="mb-2">
+      <label class="form-label small fw-semibold">${c.label}</label>
+      <input type="text" class="form-control form-control-sm" id="f_${c.key}" value="${isEdit ? (existing[c.key] ?? '') : ''}">
+    </div>`).join('');
+
+  const modalHtml = `
+  <div class="modal fade" id="dynModal" tabindex="-1">
+    <div class="modal-dialog"><div class="modal-content glass">
+      <div class="modal-header"><h6 class="modal-title">${isEdit ? 'Edit' : 'Tambah'} Data</h6>
+      <button class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body">${fields}</div>
+      <div class="modal-footer"><button class="btn btn-accent btn-sm" onclick='submitForm("${table}", ${JSON.stringify(columns).replace(/'/g,"&#39;")}, ${isEdit ? `"${existing.id}"` : 'null'})'>Simpan</button></div>
+    </div></div>
+  </div>`;
+  document.getElementById('dynModalHolder')?.remove();
+  const holder = document.createElement('div'); holder.id = 'dynModalHolder'; holder.innerHTML = modalHtml;
+  document.body.appendChild(holder);
+  new bootstrap.Modal(document.getElementById('dynModal')).show();
+}
+
+async function submitForm(table, columns, id) {
+  const data = {};
+  if (id) data.id = id;
+  if (STATE.user.role === 'Guru' && columns.some(c => c.key === 'guruId')) data.guruId = STATE.user.id;
+  columns.forEach(c => data[c.key] = document.getElementById('f_' + c.key).value);
+
+  const res = id ? await apiCall('update', { table, data }) : await apiCall('create', { table, data });
+  if (res.success) {
+    showToast('Data berhasil disimpan.', 'success');
+    bootstrap.Modal.getInstance(document.getElementById('dynModal')).hide();
+    navigate(STATE.currentPage);
+  }
+}
+
+async function deleteRow(table, id) {
+  if (!confirm('Yakin ingin menghapus data ini?')) return;
+  const res = await apiCall('delete', { table, id });
+  if (res.success) { showToast('Data dihapus.', 'success'); navigate(STATE.currentPage); }
+}
+
+/*************************************************************
+ * ABSENSI
+ *************************************************************/
+async function renderAbsensi() {
+  const kelasRes = await apiCall('getAll', { table: 'Kelas' });
+  const siswaRes = await apiCall('getAll', { table: 'DataSiswa' });
+  const kelasOptions = (kelasRes.data || []).map(k => `<option value="${k.id}">${k.namaKelas}</option>`).join('');
+
+  document.getElementById('pageContent').innerHTML = `
+    <div class="glass card-section">
+      <div class="row g-2 mb-3">
+        <div class="col-md-4"><label class="form-label small fw-semibold">Tanggal</label>
+          <input type="date" class="form-control form-control-sm" id="absTanggal" value="${new Date().toISOString().slice(0,10)}"></div>
+        <div class="col-md-4"><label class="form-label small fw-semibold">Kelas</label>
+          <select class="form-select form-select-sm" id="absKelas" onchange="loadSiswaAbsensi()"><option value="">Pilih Kelas</option>${kelasOptions}</select></div>
+        <div class="col-md-4"><label class="form-label small fw-semibold">Jam Ke</label>
+          <input type="text" class="form-control form-control-sm" id="absJamKe" placeholder="1-2"></div>
+      </div>
+      <div id="absensiList" class="section-sub">Pilih kelas untuk menampilkan daftar siswa.</div>
+    </div>`;
+  window._allSiswa = siswaRes.data || [];
+}
+
+function loadSiswaAbsensi() {
+  const kelasId = document.getElementById('absKelas').value;
+  const siswaKelas = window._allSiswa.filter(s => s.kelasId === kelasId);
+  if (!siswaKelas.length) { document.getElementById('absensiList').innerHTML = '<p class="section-sub">Tidak ada siswa di kelas ini.</p>'; return; }
+
+  const rows = siswaKelas.map(s => `
+    <tr><td>${s.nis}</td><td>${s.nama}</td>
+    <td><select class="form-select form-select-sm" id="stat_${s.id}">
+      <option value="Hadir">Hadir</option><option value="Sakit">Sakit</option>
+      <option value="Izin">Izin</option><option value="Alpa">Alpa</option>
+    </select></td></tr>`).join('');
+
+  document.getElementById('absensiList').innerHTML = `
+    <div class="table-responsive"><table class="table table-sm">
+      <thead><tr><th>NIS</th><th>Nama</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <button class="btn btn-accent btn-sm mt-2" onclick="simpanAbsensi()"><i class="fa-solid fa-save me-1"></i>Simpan Absensi</button>`;
+}
+
+async function simpanAbsensi() {
+  const kelasId = document.getElementById('absKelas').value;
+  const tanggal = document.getElementById('absTanggal').value;
+  const jamKe = document.getElementById('absJamKe').value;
+  const siswaKelas = window._allSiswa.filter(s => s.kelasId === kelasId);
+
+  const rows = siswaKelas.map(s => ({
+    tanggal, kelasId, guruId: STATE.user.id, siswaId: s.id, jamKe,
+    status: document.getElementById('stat_' + s.id).value
+  }));
+  const res = await apiCall('bulkCreate', { table: 'Absensi', rows });
+  if (res.success) showToast('Absensi berhasil disimpan.', 'success');
+}
+
+/*************************************************************
+ * NILAI (LEGER DINAMIS)
+ *************************************************************/
+async function renderNilai() {
+  const kelasRes = await apiCall('getAll', { table: 'Kelas' });
+  const kelasOptions = (kelasRes.data || []).map(k => `<option value="${k.id}">${k.namaKelas}</option>`).join('');
+
+  document.getElementById('pageContent').innerHTML = `
+    <div class="glass card-section mb-3">
+      <div class="row g-2">
+        <div class="col-md-3"><label class="form-label small fw-semibold">Kelas</label>
+          <select class="form-select form-select-sm" id="nlKelas">${kelasOptions}</select></div>
+        <div class="col-md-3"><label class="form-label small fw-semibold">Jenis Nilai</label>
+          <select class="form-select form-select-sm" id="nlJenis">
+            <option>Tugas</option><option>UH</option><option>PTS</option><option>PAS</option><option>Praktik</option>
+          </select></div>
+        <div class="col-md-3"><label class="form-label small fw-semibold">Nama Penilaian</label>
+          <input class="form-control form-control-sm" id="nlNama" placeholder="Contoh: Tugas 1"></div>
+        <div class="col-md-3"><label class="form-label small fw-semibold">Semester / Tapel</label>
+          <div class="d-flex gap-1"><input class="form-control form-control-sm" id="nlSemester" placeholder="Ganjil" value="${STATE.config.semesterAktif||''}">
+          <input class="form-control form-control-sm" id="nlTapel" placeholder="2026/2027" value="${STATE.config.tapelAktif||''}"></div></div>
+      </div>
+      <button class="btn btn-accent btn-sm mt-3" onclick="loadLeger()"><i class="fa-solid fa-magnifying-glass me-1"></i>Tampilkan Leger</button>
+      <button class="btn btn-soft btn-sm mt-3" onclick="printLeger()"><i class="fa-solid fa-print me-1"></i>Cetak PDF</button>
+    </div>
+    <div id="legerHolder"></div>`;
+}
+
+async function loadLeger() {
+  const kelasId = document.getElementById('nlKelas').value;
+  const semester = document.getElementById('nlSemester').value;
+  const tapel = document.getElementById('nlTapel').value;
+  const mapelId = STATE.user.id; // asumsi 1 guru dapat difilter per mapel; sederhanakan pakai guruId sbg mapel scope
+
+  const res = await apiCall('getLeger', { kelasId, mapelId, semester, tapel });
+  const siswaRes = await apiCall('getAll', { table: 'DataSiswa', filterField: 'kelasId', filterValue: kelasId });
+  window._legerSiswa = siswaRes.data || [];
+
+  if (!res.success) return;
+  window._legerData = res.data;
+
+  const kolom = res.data.kolomPenilaian;
+  const theadKolom = kolom.map(k => `<th>${k}</th>`).join('');
+  const rows = res.data.leger.map(r => `<tr><td>${r.nis}</td><td>${r.nama}</td>
+    ${kolom.map(k => `<td class="text-center">${r.nilai[k] ?? '-'}</td>`).join('')}<td class="text-center fw-bold">${r.rataRata}</td></tr>`).join('')
+    || `<tr><td colspan="${kolom.length+3}" class="text-center section-sub py-4">Belum ada nilai.</td></tr>`;
+
+  document.getElementById('legerHolder').innerHTML = `
+    <div class="glass card-section mb-3">
+      <div class="section-title mb-2">Input Nilai Cepat</div>
+      <div class="row g-2 align-items-end">
+        <div class="col-md-4"><label class="form-label small">Siswa</label>
+          <select class="form-select form-select-sm" id="nlSiswa">${window._legerSiswa.map(s=>`<option value="${s.id}">${s.nama}</option>`).join('')}</select></div>
+        <div class="col-md-3"><label class="form-label small">Nilai</label>
+          <input type="number" class="form-control form-control-sm" id="nlNilaiInput" min="0" max="100"></div>
+        <div class="col-md-3"><button class="btn btn-accent btn-sm w-100" onclick="simpanNilaiCepat()">Simpan</button></div>
+      </div>
+    </div>
+    <div class="glass card-section">
+      <div class="section-title mb-3">Leger Nilai</div>
+      <div class="table-responsive"><table class="table table-sm" id="legerTable">
+        <thead><tr><th>NIS</th><th>Nama</th>${theadKolom}<th>Rata-Rata</th></tr></thead>
+        <tbody>${rows}</tbody></table></div>
+    </div>`;
+}
+
+async function simpanNilaiCepat() {
+  const kelasId = document.getElementById('nlKelas').value;
+  const jenis = document.getElementById('nlJenis').value;
+  const namaPenilaian = document.getElementById('nlNama').value;
+  const semester = document.getElementById('nlSemester').value;
+  const tapel = document.getElementById('nlTapel').value;
+  const siswaId = document.getElementById('nlSiswa').value;
+  const nilai = document.getElementById('nlNilaiInput').value;
+
+  const res = await apiCall('create', { table: 'Nilai', data: {
+    tanggal: new Date().toISOString().slice(0,10), kelasId, mapelId: STATE.user.id, guruId: STATE.user.id,
+    siswaId, jenis, namaPenilaian, nilai, semester, tapel
+  }});
+  if (res.success) { showToast('Nilai tersimpan.', 'success'); loadLeger(); }
+}
+
+function printLeger() {
+  if (!window._legerData) { showToast('Tampilkan leger terlebih dahulu.', 'warning'); return; }
+  printWithHeader('Leger Nilai', () => {
+    const doc = new jspdf.jsPDF();
+    addKopSurat(doc, 'LEGER NILAI SISWA');
+    const kolom = window._legerData.kolomPenilaian;
+    const head = [['NIS', 'Nama', ...kolom, 'Rata-Rata']];
+    const body = window._legerData.leger.map(r => [r.nis, r.nama, ...kolom.map(k => r.nilai[k] ?? '-'), r.rataRata]);
+    doc.autoTable({ head, body, startY: 55, styles: { fontSize: 8 } });
+    addTandaTanganDanBarcode(doc, 'LGR-' + Date.now());
+    doc.save('Leger_Nilai.pdf');
+  });
+}
+
+/*************************************************************
+ * PERANGKAT AJAR (UPLOAD PDF)
+ *************************************************************/
+const JENIS_PERANGKAT = ['Silabus', 'ATP', 'Prota', 'Promes', 'Modul Ajar/RPP', 'KKTP'];
+
+async function renderPerangkat() {
+  const filter = STATE.user.role === 'Guru' ? { filterField: 'guruId', filterValue: STATE.user.id } : {};
+  const res = await apiCall('getAll', Object.assign({ table: 'PerangkatAjar' }, filter));
+  const rows = res.data || [];
+
+  const cardsHtml = JENIS_PERANGKAT.map(jenis => {
+    const found = rows.find(r => r.jenis === jenis && r.status !== 'Ditolak');
+    const statusChip = found
+      ? `<span class="chip" style="background:${statusColor(found.status)}20; color:${statusColor(found.status)}">${found.status}</span>`
+      : `<span class="chip bg-secondary-subtle text-secondary">Belum Upload</span>`;
+    return `<div class="col-md-4">
+      <div class="glass p-3 h-100">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div class="fw-semibold">${jenis}</div>${statusChip}
+        </div>
+        ${found ? `<a href="${found.fileUrl}" target="_blank" class="small d-block mb-2"><i class="fa-solid fa-file-pdf text-danger me-1"></i>${found.namaFile}</a>
+        ${found.catatanRevisi ? `<div class="small text-danger mb-2"><i class="fa-solid fa-triangle-exclamation me-1"></i>${found.catatanRevisi}</div>` : ''}` : '<p class="section-sub small">Belum ada dokumen.</p>'}
+        <button class="btn btn-soft btn-sm w-100" onclick="openUploadPerangkat('${jenis}')"><i class="fa-solid fa-upload me-1"></i>${found ? 'Upload Ulang' : 'Upload'}</button>
+      </div></div>`;
+  }).join('');
+
+  document.getElementById('pageContent').innerHTML = `<div class="row g-3">${cardsHtml}</div>`;
+}
+function statusColor(status) {
+  if (status === 'Disetujui') return '#12b76a';
+  if (status === 'Revisi') return '#f79009';
+  if (status === 'Ditolak') return '#f04438';
+  return '#6b7385';
+}
+
+function openUploadPerangkat(jenis) {
+  const modalHtml = `
+  <div class="modal fade" id="uploadModal" tabindex="-1">
+    <div class="modal-dialog"><div class="modal-content glass">
+      <div class="modal-header"><h6 class="modal-title">Upload ${jenis}</h6><button class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body">
+        <div class="upload-drop" onclick="document.getElementById('fileInput').click()">
+          <i class="fa-solid fa-cloud-arrow-up fa-2x mb-2" style="color:var(--accent)"></i>
+          <p class="mb-0 small">Klik untuk memilih file PDF</p>
+          <p class="small text-muted mb-0" id="fileNameLabel"></p>
+        </div>
+        <input type="file" id="fileInput" accept="application/pdf" class="d-none" onchange="document.getElementById('fileNameLabel').textContent=this.files[0]?.name || ''">
+      </div>
+      <div class="modal-footer"><button class="btn btn-accent btn-sm" onclick="submitUploadPerangkat('${jenis}')">Upload</button></div>
+    </div></div>
+  </div>`;
+  document.getElementById('uploadModalHolder')?.remove();
+  const holder = document.createElement('div'); holder.id = 'uploadModalHolder'; holder.innerHTML = modalHtml;
+  document.body.appendChild(holder);
+  new bootstrap.Modal(document.getElementById('uploadModal')).show();
+}
+
+async function submitUploadPerangkat(jenis) {
+  const file = document.getElementById('fileInput').files[0];
+  if (!file) { showToast('Pilih file terlebih dahulu.', 'warning'); return; }
+  const base64 = await fileToBase64(file);
+  const res = await apiCall('uploadFile', {
+    table: 'PerangkatAjar', fileData: base64, fileName: file.name, mimeType: file.type,
+    data: { guruId: STATE.user.id, jenis, tapel: STATE.config.tapelAktif || '' }
+  });
+  if (res.success) {
+    showToast('Berhasil diupload.', 'success');
+    bootstrap.Modal.getInstance(document.getElementById('uploadModal')).hide();
+    renderPerangkat();
+  }
+}
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+/*************************************************************
+ * PANDUAN MENGAJAR (REPOSITORI)
+ *************************************************************/
+async function renderPanduan() {
+  const res = await apiCall('getAll', { table: 'PanduanMengajar' });
+  const rows = res.data || [];
+  const isAdmin = STATE.user.role === 'Admin';
+  const html = rows.map(r => `
+    <div class="col-md-4"><div class="glass p-3 h-100">
+      <div class="fw-semibold mb-1"><i class="fa-solid ${r.tipe==='Link'?'fa-link':'fa-file-pdf'} me-1"></i>${r.judul}</div>
+      <div class="section-sub small mb-2">${r.kategori} • ${r.deskripsi||''}</div>
+      <a href="${r.fileUrl || r.linkUrl}" target="_blank" class="btn btn-soft btn-sm w-100">Buka</a>
+    </div></div>`).join('') || '<p class="section-sub">Belum ada dokumen panduan.</p>';
+
+  document.getElementById('pageContent').innerHTML = `
+    ${isAdmin ? `<div class="text-end mb-3"><button class="btn btn-accent btn-sm" onclick="openTambahPanduan()"><i class="fa-solid fa-plus me-1"></i>Tambah Panduan</button></div>` : ''}
+    <div class="row g-3">${html}</div>`;
+}
+function openTambahPanduan() {
+  const modalHtml = `<div class="modal fade" id="panduanModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content glass">
+    <div class="modal-header"><h6 class="modal-title">Tambah Panduan</h6><button class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+      <input class="form-control form-control-sm mb-2" id="pdJudul" placeholder="Judul">
+      <input class="form-control form-control-sm mb-2" id="pdKategori" placeholder="Kategori (Buku Teks/Regulasi/Media)">
+      <input class="form-control form-control-sm mb-2" id="pdDeskripsi" placeholder="Deskripsi singkat">
+      <input class="form-control form-control-sm mb-2" id="pdLink" placeholder="Link URL (jika tipe link/media)">
+      <input type="file" class="form-control form-control-sm" id="pdFile" accept="application/pdf">
+    </div>
+    <div class="modal-footer"><button class="btn btn-accent btn-sm" onclick="submitPanduan()">Simpan</button></div>
+  </div></div></div>`;
+  document.getElementById('panduanModalHolder')?.remove();
+  const holder = document.createElement('div'); holder.id = 'panduanModalHolder'; holder.innerHTML = modalHtml;
+  document.body.appendChild(holder);
+  new bootstrap.Modal(document.getElementById('panduanModal')).show();
+}
+async function submitPanduan() {
+  const judul = document.getElementById('pdJudul').value;
+  const kategori = document.getElementById('pdKategori').value;
+  const deskripsi = document.getElementById('pdDeskripsi').value;
+  const linkUrl = document.getElementById('pdLink').value;
+  const file = document.getElementById('pdFile').files[0];
+
+  let res;
+  if (file) {
+    const base64 = await fileToBase64(file);
+    res = await apiCall('uploadFile', { table: 'PanduanMengajar', fileData: base64, fileName: file.name, mimeType: file.type,
+      data: { judul, kategori, deskripsi, tipe: 'PDF' } });
+  } else {
+    res = await apiCall('create', { table: 'PanduanMengajar', data: { judul, kategori, deskripsi, tipe: 'Link', linkUrl } });
+  }
+  if (res.success) { showToast('Panduan ditambahkan.', 'success'); bootstrap.Modal.getInstance(document.getElementById('panduanModal')).hide(); renderPanduan(); }
+}
+
+/*************************************************************
+ * ADMIN: REKAP GURU WALI
+ *************************************************************/
+async function renderRekapWali() {
+  const res = await apiCall('getRekapWali');
+  const rows = (res.data || []).map(r => `<tr><td>${r.namaKelas}</td><td>${r.waliNama}</td><td>${r.jumlahSiswa}</td><td>${r.jumlahBimbingan}</td></tr>`).join('');
+  document.getElementById('pageContent').innerHTML = `
+    <div class="glass card-section">
+      <div class="section-title mb-3">Rekap Guru Wali Kelas</div>
+      <div class="table-responsive"><table class="table table-sm">
+      <thead><tr><th>Kelas</th><th>Wali Kelas</th><th>Jml Siswa</th><th>Jml Bimbingan</th></tr></thead>
+      <tbody>${rows || '<tr><td colspan="4" class="text-center py-3 section-sub">Belum ada data.</td></tr>'}</tbody></table></div>
+    </div>`;
+}
+
+/*************************************************************
+ * ADMIN: MANAJEMEN USER
+ *************************************************************/
+async function renderUserManagement() {
+  const res = await apiCall('getAll', { table: 'Users' });
+  const rows = (res.data || []).map(u => `<tr>
+    <td>${u.nama}</td><td>${u.username}</td><td>${u.role}</td><td><span class="chip" style="background:${u.status==='Aktif'?'#12b76a20':'#f0443820'}; color:${u.status==='Aktif'?'#12b76a':'#f04438'}">${u.status}</span></td>
+    <td class="text-end"><button class="btn btn-sm btn-soft" onclick="resetPasswordUser('${u.id}')"><i class="fa-solid fa-key"></i></button>
+    <button class="btn btn-sm btn-soft text-danger" onclick="deleteRow('Users','${u.id}')"><i class="fa-solid fa-trash"></i></button></td></tr>`).join('');
+
+  document.getElementById('pageContent').innerHTML = `
+    <div class="glass card-section">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="section-title">Manajemen User</div>
+        <button class="btn btn-accent btn-sm" onclick="openTambahUser()"><i class="fa-solid fa-user-plus me-1"></i>Tambah User</button>
+      </div>
+      <div class="table-responsive"><table class="table table-sm">
+      <thead><tr><th>Nama</th><th>Username</th><th>Role</th><th>Status</th><th></th></tr></thead>
+      <tbody>${rows || '<tr><td colspan="5" class="text-center py-3 section-sub">Belum ada user.</td></tr>'}</tbody></table></div>
+    </div>`;
+}
+function openTambahUser() {
+  const modalHtml = `<div class="modal fade" id="userModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content glass">
+    <div class="modal-header"><h6 class="modal-title">Tambah User</h6><button class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+      <input class="form-control form-control-sm mb-2" id="usNama" placeholder="Nama Lengkap">
+      <input class="form-control form-control-sm mb-2" id="usUsername" placeholder="Username">
+      <input class="form-control form-control-sm mb-2" id="usPassword" placeholder="Password" type="password">
+      <select class="form-select form-select-sm mb-2" id="usRole"><option value="Guru">Guru</option><option value="Admin">Admin</option></select>
+      <input class="form-control form-control-sm mb-2" id="usNip" placeholder="NIP (opsional)">
+    </div>
+    <div class="modal-footer"><button class="btn btn-accent btn-sm" onclick="submitTambahUser()">Simpan</button></div>
+  </div></div></div>`;
+  document.getElementById('userModalHolder')?.remove();
+  const holder = document.createElement('div'); holder.id = 'userModalHolder'; holder.innerHTML = modalHtml;
+  document.body.appendChild(holder);
+  new bootstrap.Modal(document.getElementById('userModal')).show();
+}
+async function submitTambahUser() {
+  const data = {
+    nama: document.getElementById('usNama').value, username: document.getElementById('usUsername').value,
+    password: document.getElementById('usPassword').value, role: document.getElementById('usRole').value,
+    nip: document.getElementById('usNip').value, status: 'Aktif'
+  };
+  const res = await apiCall('manageUser', { sub: 'add', data });
+  if (res.success) { showToast('User ditambahkan.', 'success'); bootstrap.Modal.getInstance(document.getElementById('userModal')).hide(); renderUserManagement(); }
+}
+async function resetPasswordUser(id) {
+  const pw = prompt('Masukkan password baru:');
+  if (!pw) return;
+  const res = await apiCall('manageUser', { sub: 'resetPassword', id, newPassword: pw });
+  if (res.success) showToast('Password direset.', 'success');
+}
+
+/*************************************************************
+ * ADMIN: IMPORT SISWA MASSAL (CSV)
+ *************************************************************/
+async function renderImportSiswa() {
+  const kelasRes = await apiCall('getAll', { table: 'Kelas' });
+  document.getElementById('pageContent').innerHTML = `
+    <div class="glass card-section">
+      <div class="section-title mb-2">Import Data Siswa (CSV)</div>
+      <p class="section-sub small">Format kolom CSV: <code>nis,nisn,nama,jenisKelamin,kelasId</code>. Kelas tersedia: ${(kelasRes.data||[]).map(k=>k.id+' ('+k.namaKelas+')').join(', ') || '-'}</p>
+      <input type="file" class="form-control form-control-sm mb-3" id="csvFile" accept=".csv">
+      <button class="btn btn-accent btn-sm" onclick="prosesImportCsv()"><i class="fa-solid fa-upload me-1"></i>Proses Import</button>
+      <div id="importPreview" class="mt-3"></div>
+    </div>`;
+}
+function prosesImportCsv() {
+  const file = document.getElementById('csvFile').files[0];
+  if (!file) { showToast('Pilih file CSV.', 'warning'); return; }
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    const lines = e.target.result.split('\n').map(l => l.trim()).filter(Boolean);
+    const headers = lines[0].split(',').map(h => h.trim());
+    const rows = lines.slice(1).map(line => {
+      const vals = line.split(',');
+      const obj = {}; headers.forEach((h, i) => obj[h] = (vals[i]||'').trim());
+      obj.status = 'Aktif';
+      return obj;
     });
-    navigate('dashboard');
+    document.getElementById('importPreview').innerHTML = `<p class="small section-sub">${rows.length} baris siap diimport.</p>`;
+    const res = await apiCall('bulkCreate', { table: 'DataSiswa', rows });
+    if (res.success) showToast(res.message, 'success');
+  };
+  reader.readAsText(file);
+}
+
+/*************************************************************
+ * ADMIN: KONFIGURASI SEKOLAH
+ *************************************************************/
+async function renderKonfigurasi() {
+  const res = await apiCall('getAll', { table: 'Config' });
+  const cfg = {}; (res.data || []).forEach(r => cfg[r.key] = r.value);
+
+  const fields = ['namaSekolah','alamatSekolah','npsn','kepsekNama','kepsekNip','logoUrl','tapelAktif','semesterAktif'];
+  const labels = {namaSekolah:'Nama Sekolah', alamatSekolah:'Alamat', npsn:'NPSN', kepsekNama:'Nama Kepala Sekolah',
+    kepsekNip:'NIP Kepala Sekolah', logoUrl:'URL Logo Sekolah', tapelAktif:'Tahun Ajaran Aktif', semesterAktif:'Semester Aktif'};
+
+  const html = fields.map(f => `
+    <div class="mb-2"><label class="form-label small fw-semibold">${labels[f]}</label>
+    <input class="form-control form-control-sm" id="cfg_${f}" value="${cfg[f]||''}"></div>`).join('');
+
+  document.getElementById('pageContent').innerHTML = `
+    <div class="glass card-section" style="max-width:560px;">
+      <div class="section-title mb-3">Konfigurasi Sekolah</div>
+      ${html}
+      <button class="btn btn-accent btn-sm mt-2" onclick="simpanKonfigurasi()"><i class="fa-solid fa-save me-1"></i>Simpan</button>
+    </div>`;
+}
+async function simpanKonfigurasi() {
+  const fields = ['namaSekolah','alamatSekolah','npsn','kepsekNama','kepsekNip','logoUrl','tapelAktif','semesterAktif'];
+  for (const f of fields) {
+    await apiCall('update', { table: 'Config', data: { id: f, key: f, value: document.getElementById('cfg_'+f).value } });
   }
+  showToast('Konfigurasi disimpan.', 'success');
+  await loadConfig();
+}
 
-  function logout() {
-    if (!confirm('Anda yakin ingin keluar?')) return;
-    STATE.token = null;
-    STATE.user = null;
-    localStorage.removeItem('sag_token');
-    localStorage.removeItem('sag_user');
-    location.reload();
-  }
+/*************************************************************
+ * ADMIN: VALIDASI & MONITORING PERANGKAT AJAR
+ *************************************************************/
+async function renderMonitoringPerangkat() {
+  const res = await apiCall('getMonitoringPerangkat');
+  const rows = (res.data || []).map(p => `<tr>
+    <td>${p.guruNama}</td><td>${p.jenis}</td><td><a href="${p.fileUrl}" target="_blank">${p.namaFile}</a></td>
+    <td><span class="chip" style="background:${statusColor(p.status)}20; color:${statusColor(p.status)}">${p.status}</span></td>
+    <td class="text-end">
+      <button class="btn btn-sm btn-soft text-success" onclick="setStatusPerangkat('${p.id}','Disetujui')"><i class="fa-solid fa-check"></i></button>
+      <button class="btn btn-sm btn-soft text-warning" onclick="setStatusPerangkat('${p.id}','Revisi')"><i class="fa-solid fa-rotate-left"></i></button>
+      <button class="btn btn-sm btn-soft text-danger" onclick="setStatusPerangkat('${p.id}','Ditolak')"><i class="fa-solid fa-xmark"></i></button>
+    </td></tr>`).join('');
 
-  /* ============================================================
-     NAVIGATION
-     ============================================================ */
-  function navigate(view) {
-    STATE.currentView = view;
-    // menu aktif
-    document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
-    const activeMenu = document.querySelector(`.menu-item[data-view="${view}"]`);
-    if (activeMenu) activeMenu.classList.add('active');
-    // tutup sidebar di mobile
-    if (window.innerWidth < 992) toggleSidebar(false);
-    // render
-    renderView(view);
-  }
-
-  function refreshCurrentView() {
-    renderView(STATE.currentView);
-  }
-
-  function toggleSidebar(show) {
-    document.getElementById('sidebar').classList.toggle('show', show);
-    document.getElementById('sidebarOverlay').classList.toggle('show', show);
-  }
-
-  function renderView(view) {
-    const titles = {
-      dashboard  : ['Dashboard', 'Ringkasan statistik sekolah'],
-      absensi    : ['Input Absensi', 'Catat kehadiran siswa'],
-      nilai      : ['Input Penilaian', 'Leger dinamis & riwayat nilai'],
-      jadwal     : ['Jadwal Mengajar', 'Jadwal mingguan'],
-      agenda     : ['Jurnal Agenda', 'Catatan kegiatan pembelajaran'],
-      bimbingan  : ['Bimbingan Wali', 'Catatan bimbingan siswa'],
-      eperangkat : ['E-Perangkat Ajar', 'Upload mandiri perangkat ajar'],
-      panduan    : ['Panduan Mengajar', 'Repositori buku teks & regulasi'],
-      rekapwali  : ['Rekap Guru Wali', 'Rekap wali kelas'],
-      users      : ['Manajemen User', 'Tambah / hapus user'],
-      importsiswa: ['Import Siswa Massal', 'Upload data siswa via CSV'],
-      validasi   : ['Validasi & Monitoring', 'Supervisi perangkat ajar guru'],
-      config     : ['Konfigurasi Sekolah', 'Pengaturan identitas sekolah'],
-      profile    : ['Profil Saya', 'Pengaturan akun']
-    };
-    const t = titles[view] || ['—',''];
-    document.getElementById('topbarTitle').textContent = t[0];
-    document.getElementById('topbarSubtitle').innerHTML = `<span id="currentDate">${new Date().toLocaleDateString('id-ID',{weekday:'long',day:'2-digit',month:'long',year:'numeric'})}</span> &middot; ${t[1]}`;
-
-    const container = document.getElementById('viewContainer');
-    container.innerHTML = `<div class="glass content-card"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><div>Memuat...</div></div></div>`;
-
-    switch(view) {
-      case 'dashboard'   : viewDashboard(); break;
-      case 'absensi'     : viewAbsensi(); break;
-      case 'nilai'       : viewNilai(); break;
-      case 'jadwal'      : viewJadwal(); break;
-      case 'agenda'      : viewAgenda(); break;
-      case 'bimbingan'   : viewBimbingan(); break;
-      case 'eperangkat'  : viewEPerangkat(); break;
-      case 'panduan'     : viewPanduan(); break;
-      case 'rekapwali'   : viewRekapWali(); break;
-      case 'users'       : viewUsers(); break;
-      case 'importsiswa' : viewImportSiswa(); break;
-      case 'validasi'    : viewValidasi(); break;
-      case 'config'      : viewConfig(); break;
-      case 'profile'     : viewProfile(); break;
-    }
-  }
-
-  /* ============================================================
-     VIEW: DASHBOARD
-     ============================================================ */
-  let dashboardChart = null;
-  async function viewDashboard() {
-    showLoading('Memuat statistik...');
-    const res = await api('getDashboard');
-    hideLoading();
-    if (!res.success) {
-      document.getElementById('viewContainer').innerHTML = `<div class="glass content-card"><div class="alert alert-danger">${escapeHtml(res.error)}</div></div>`;
-      return;
-    }
-    const d = res.data;
-    const cfg = STATE.config;
-    const html = `
-      <div class="glass content-card mb-3">
-        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
-          <div>
-            <div class="page-title">Selamat datang, ${escapeHtml(STATE.user.nama)}!</div>
-            <div class="page-subtitle">${escapeHtml(cfg.nama_sekolah || '')} &middot; Tahun ${escapeHtml(cfg.tahun_ajaran||'')} - ${escapeHtml(cfg.semester||'')}</div>
-          </div>
-          <div class="d-flex gap-2">
-            <button class="btn btn-sm btn-platinum" onclick="printLembarKontrol()">
-              <i class="fas fa-print me-1"></i>Lembar Kontrol
-            </button>
-          </div>
-        </div>
+  document.getElementById('pageContent').innerHTML = `
+    <div class="glass card-section">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="section-title">Validasi & Monitoring Perangkat Ajar</div>
+        <button class="btn btn-soft btn-sm" onclick="printLembarKontrol()"><i class="fa-solid fa-print me-1"></i>Cetak Lembar Kontrol</button>
       </div>
+      <div class="table-responsive"><table class="table table-sm">
+      <thead><tr><th>Guru</th><th>Jenis</th><th>File</th><th>Status</th><th></th></tr></thead>
+      <tbody>${rows || '<tr><td colspan="5" class="text-center py-3 section-sub">Belum ada dokumen.</td></tr>'}</tbody></table></div>
+    </div>`;
+  window._monitoringData = res.data || [];
+}
+async function setStatusPerangkat(id, status) {
+  let catatan = '';
+  if (status === 'Revisi' || status === 'Ditolak') catatan = prompt('Catatan revisi/penolakan:') || '';
+  const res = await apiCall('validasiPerangkat', { id, status, catatan });
+  if (res.success) { showToast('Status diperbarui.', 'success'); renderMonitoringPerangkat(); }
+}
+function printLembarKontrol() {
+  printWithHeader('Lembar Kontrol', () => {
+    const doc = new jspdf.jsPDF();
+    addKopSurat(doc, 'LEMBAR KONTROL KELENGKAPAN ADMINISTRASI GURU');
+    const body = (window._monitoringData||[]).map(p => [p.guruNama, p.jenis, p.status, p.catatanRevisi||'-']);
+    doc.autoTable({ head: [['Guru','Jenis Dokumen','Status','Catatan']], body, startY: 55 });
+    addTandaTanganDanBarcode(doc, 'LK-' + Date.now());
+    doc.save('Lembar_Kontrol_Administrasi.pdf');
+  });
+}
 
-      <div class="row g-3 mb-3">
-        <div class="col-6 col-md-3">
-          <div class="stat-card">
-            <div class="stat-icon" style="background:rgba(212,175,55,0.20);color:var(--gold-2);"><i class="fas fa-school"></i></div>
-            <div class="stat-value">${d.rombel}</div>
-            <div class="stat-label">Rombel</div>
-          </div>
-        </div>
-        <div class="col-6 col-md-3">
-          <div class="stat-card">
-            <div class="stat-icon" style="background:rgba(54,162,235,0.20);color:#4dabf7;"><i class="fas fa-chalkboard-teacher"></i></div>
-            <div class="stat-value">${d.guru}</div>
-            <div class="stat-label">Guru</div>
-          </div>
-        </div>
-        <div class="col-6 col-md-3">
-          <div class="stat-card">
-            <div class="stat-icon" style="background:rgba(153,102,255,0.20);color:#9775fa;"><i class="fas fa-user-graduate"></i></div>
-            <div class="stat-value">${d.siswa}</div>
-            <div class="stat-label">Siswa</div>
-          </div>
-        </div>
-        <div class="col-6 col-md-3">
-          <div class="stat-card">
-            <div class="stat-icon" style="background:rgba(75,192,192,0.20);color:#63e6be;"><i class="fas fa-book"></i></div>
-            <div class="stat-value">${d.mapel}</div>
-            <div class="stat-label">Mata Pelajaran</div>
-          </div>
-        </div>
-      </div>
+/*************************************************************
+ * PDF UTILITIES (KOP SURAT, TTD, BARCODE)
+ *************************************************************/
+function printWithHeader(label, fn) {
+  try { fn(); } catch (err) { showToast('Gagal membuat PDF: ' + err.message, 'danger'); }
+}
+function addKopSurat(doc, judul) {
+  const cfg = STATE.config;
+  doc.setFontSize(13); doc.setFont(undefined, 'bold');
+  doc.text(cfg.namaSekolah || 'Nama Sekolah', 40, 18);
+  doc.setFontSize(9); doc.setFont(undefined, 'normal');
+  doc.text(cfg.alamatSekolah || '-', 40, 24);
+  doc.text('NPSN: ' + (cfg.npsn || '-'), 40, 29);
+  doc.setLineWidth(0.8); doc.line(14, 34, 196, 34);
 
-      <div class="row g-3">
-        <div class="col-lg-6">
-          <div class="glass content-card h-100">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-              <h6 class="mb-0"><i class="fas fa-chart-bar me-2 gold-text"></i>Persentase Kelengkapan Perangkat Ajar per Guru</h6>
-            </div>
-            <div style="position:relative;height:260px;">
-              <canvas id="chartKelengkapan"></canvas>
-            </div>
-          </div>
-        </div>
-        <div class="col-lg-6">
-          <div class="glass content-card h-100">
-            <h6 class="mb-3"><i class="fas fa-chart-pie me-2 gold-text"></i>Status Perangkat Ajar (${d.total_perangkat} total)</h6>
-            <div style="position:relative;height:260px;">
-              <canvas id="chartStatus"></canvas>
-            </div>
-          </div>
-        </div>
-      </div>
+  doc.setFontSize(12); doc.setFont(undefined, 'bold'); doc.text(judul, 105, 44, { align: 'center' });
+  doc.setFontSize(9); doc.setFont(undefined, 'normal');
+  doc.text('Tahun Ajaran: ' + (cfg.tapelAktif || '-') + '  |  Semester: ' + (cfg.semesterAktif || '-'), 105, 50, { align: 'center' });
+}
+function addTandaTanganDanBarcode(doc, code) {
+  const cfg = STATE.config;
+  const finalY = doc.lastAutoTable ? doc.lastAutoTable.finalY + 20 : 120;
+  doc.setFontSize(9);
+  doc.text('Kuningan, ' + new Date().toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric' }), 140, finalY);
+  doc.text('Mengetahui,', 140, finalY + 6);
+  doc.text('Kepala Sekolah', 140, finalY + 12);
+  doc.text(cfg.kepsekNama || '(.....................)', 140, finalY + 32);
+  doc.text('NIP. ' + (cfg.kepsekNip || '-'), 140, finalY + 37);
 
-      <div class="glass content-card mt-3">
-        <div class="d-flex justify-content-between align-items-center mb-2">
-          <h6 class="mb-0"><i class="fas fa-list-check me-2 gold-text"></i>Detail Kelengkapan Perangkat Ajar</h6>
-          <small style="color:rgba(245,245,247,0.55);">5 jenis dokumen wajib</small>
-        </div>
-        <div class="table-responsive">
-          <table class="table table-glass align-middle">
-            <thead>
-              <tr>
-                <th>Guru</th><th>Mapel</th><th>Kelas</th>
-                <th class="text-center">Upload</th><th class="text-center">Approved</th>
-                <th style="min-width:160px;">Persentase</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${d.kelengkapan.length === 0 ? `<tr><td colspan="6" class="text-center text-muted">Belum ada data</td></tr>` :
-                d.kelengkapan.map(k => `
-                <tr>
-                  <td>${escapeHtml(k.guru_nama)}</td>
-                  <td>${escapeHtml(k.mapel||'-')}</td>
-                  <td>${escapeHtml(k.kelas||'-')}</td>
-                  <td class="text-center">${k.uploaded}</td>
-                  <td class="text-center"><span class="badge badge-status badge-approved">${k.approved}</span></td>
-                  <td>
-                    <div class="d-flex align-items-center gap-2">
-                      <div class="progress-glass flex-grow-1"><div class="bar" style="width:${k.persen}%"></div></div>
-                      <small style="min-width:38px;text-align:right;">${k.persen}%</small>
-                    </div>
-                  </td>
-                </tr>`).join('')}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    `;
-    document.getElementById('viewContainer').innerHTML = html;
+  const canvas = document.createElement('canvas');
+  try {
+    JsBarcode(canvas, code, { format: 'CODE128', displayValue: false, height: 30 });
+    const imgData = canvas.toDataURL('image/png');
+    doc.addImage(imgData, 'PNG', 14, finalY, 45, 14);
+    doc.setFontSize(7); doc.text(code, 14, finalY + 18);
+  } catch (e) { /* barcode gagal, abaikan */ }
+}
 
-    // Render charts
-    setTimeout(() => {
-      // Chart kelengkapan per guru
-      const ctx1 = document.getElementById('chartKelengkapan');
-      if (ctx1) {
-        if (dashboardChart) dashboardChart.destroy();
-        dashboardChart = new Chart(ctx1, {
-          type: 'bar',
-          data: {
-            labels: d.kelengkapan.map(k => k.guru_nama.split(',')[0]),
-            datasets: [{
-              label: 'Kelengkapan (%)',
-              data: d.kelengkapan.map(k => k.persen),
-              backgroundColor: (ctx) => {
-                const v = ctx.raw;
-                if (v >= 80) return 'rgba(81,207,102,0.75)';
-                if (v >= 50) return 'rgba(212,175,55,0.75)';
-                return 'rgba(255,107,107,0.75)';
-              },
-              borderRadius: 6
-            }]
-          },
-          options: {
-            responsive: true, maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: {
-              y: { beginAtZero: true, max: 100, ticks: { color:'rgba(245,245,247,0.6)', callback:(v)=>v+'%' }, grid:{color:'rgba(255,255,255,0.07)'} },
-              x: { ticks: { color:'rgba(245,245,247,0.7)' }, grid:{ display:false } }
-            }
-          }
-        });
-      }
-      // Chart status (doughnut)
-      const ctx2 = document.getElementById('chartStatus');
-      if (ctx2) {
-        new Chart(ctx2, {
-          type: 'doughnut',
-          data: {
-            labels: ['Pending','Approved','Revisi','Rejected'],
-            datasets: [{
-              data: [d.status_count.pending, d.status_count.approved, d.status_count.revisi, d.status_count.rejected],
-              backgroundColor: ['#ffd43b','#51cf66','#ffa94d','#ff6b6b'],
-              borderColor:'rgba(15,23,42,0.6)',
-              borderWidth:2
-            }]
-          },
-          options: {
-            responsive: true, maintainAspectRatio: false,
-            plugins: { legend: { position:'bottom', labels:{ color:'rgba(245,245,247,0.8)', padding:14, font:{size:11} } } }
-          }
-        });
-      }
-    }, 100);
-  }
+/*************************************************************
+ * CETAK AGENDA (contoh tambahan pemakaian PDF generic table)
+ *************************************************************/
+async function printAgenda() {
+  const res = await apiCall('getAll', { table: 'Agenda', filterField: 'guruId', filterValue: STATE.user.id });
+  printWithHeader('Jurnal Agenda', () => {
+    const doc = new jspdf.jsPDF();
+    addKopSurat(doc, 'JURNAL AGENDA MENGAJAR');
+    const body = (res.data||[]).map(a => [a.tanggal, a.kelasId, a.mapelId, a.materi, a.kegiatan]);
+    doc.autoTable({ head: [['Tanggal','Kelas','Mapel','Materi','Kegiatan']], body, startY: 55, styles:{fontSize:8} });
+    addTandaTanganDanBarcode(doc, 'AGD-' + Date.now());
+    doc.save('Jurnal_Agenda.pdf');
+  });
+}
+</script>
 
-  /* ============================================================
-     VIEW: ABSENSI
-     ============================================================ */
-  async function viewAbsensi() {
-    showLoading('Memuat...');
-    const [kelasRes, mapelRes] = await Promise.all([
-      api('getKelas'),
-      api('getMapel')
-    ]);
-    hideLoading();
-    if (!kelasRes.success || !mapelRes.success) {
-      document.getElementById('viewContainer').innerHTML = `<div class="glass content-card"><div class="alert alert-danger">Gagal memuat data</div></div>`;
-      return;
-    }
-    STATE.cache.kelas = kelasRes.data;
-    STATE.cache.mapel = mapelRes.data;
-
-    const kelasOpt = kelasRes.data.map(k => `<option value="${k.nama_kelas}">${escapeHtml(k.nama_kelas)}</option>`).join('');
-    const mapelOpt = mapelRes.data.map(m => `<option value="${m.kode_mapel}">${escapeHtml(m.nama_mapel)}</option>`).join('');
-
-    document.getElementById('viewContainer').innerHTML = `
-      <div class="glass content-card">
-        <div class="d-flex justify-content-between flex-wrap align-items-center mb-3">
-          <h6 class="mb-0"><i class="fas fa-user-check me-2 gold-text"></i>Input Absensi Siswa</h6>
-          <button class="btn btn-sm btn-gold" onclick="printAbsensiPDF()">
-            <i class="fas fa-print me-1"></i>Cetak Rekap
-          </button>
-        </div>
-        <div class="row g-2 mb-3">
-          <div class="col-md-3">
-            <label class="form-label-glass">Tanggal</label>
-            <input type="date" class="form-control form-control-glass" id="absTanggal" value="${todayStr()}" />
-          </div>
-          <div class="col-md-3">
-            <label class="form-label-glass">Kelas</label>
-            <select class="form-control form-control-glass" id="absKelas" onchange="loadAbsensiSiswa()">
-              <option value="">- Pilih Kelas -</option>${kelasOpt}
-            </select>
-          </div>
-          <div class="col-md-3">
-            <label class="form-label-glass">Mapel</label>
-            <select class="form-control form-control-glass" id="absMapel">${mapelOpt}</select>
-          </div>
-          <div class="col-md-3 d-flex align-items-end">
-            <button class="btn btn-platinum w-100" onclick="loadAbsensiSiswa()">
-              <i class="fas fa-search me-1"></i>Muat Siswa
-            </button>
-          </div>
-        </div>
-        <div id="absensiTable">
-          <div class="empty-state"><i class="fas fa-info-circle"></i><div>Pilih kelas untuk memuat daftar siswa</div></div>
-        </div>
-      </div>
-    `;
-  }
-
-  async function loadAbsensiSiswa() {
-    const kelas = document.getElementById('absKelas').value;
-    if (!kelas) return showToast('Pilih kelas dulu','warning');
-    showLoading('Memuat siswa...');
-    const siswaRes = await api('getSiswa', { kelas });
-    const tanggal  = document.getElementById('absTanggal').value;
-    const mapel    = document.getElementById('absMapel').value;
-    const absRes   = await api('getAbsensi', { tanggal, kelas, mapel });
-    hideLoading();
-    if (!siswaRes.success) return showToast('Gagal memuat siswa','danger');
-    const existing = absRes.success ? absRes.data : [];
-    const html = `
-      <div class="table-responsive">
-        <table class="table table-glass align-middle">
-          <thead>
-            <tr><th>No</th><th>NIS</th><th>Nama Siswa</th><th style="min-width:200px;">Status</th><th>Keterangan</th></tr>
-          </thead>
-          <tbody>
-            ${siswaRes.data.map((s,i) => {
-              const ex = existing.find(e => e.nis === s.nis);
-              const status = ex ? ex.status : 'hadir';
-              const ket = ex ? ex.keterangan : '';
-              return `
-              <tr>
-                <td>${i+1}</td>
-                <td>${escapeHtml(s.nis)}</td>
-                <td>${escapeHtml(s.nama)}</td>
-                <td>
-                  <select class="form-select form-select-sm form-control-glass abs-status" data-nis="${s.nis}" data-nama="${escapeHtml(s.nama)}">
-                    <option value="hadir" ${status==='hadir'?'selected':''}>Hadir</option>
-                    <option value="sakit" ${status==='sakit'?'selected':''}>Sakit</option>
-                    <option value="izin" ${status==='izin'?'selected':''}>Izin</option>
-                    <option value="alpa" ${status==='alpa'?'selected':''}>Alpa</option>
-                  </select>
-                </td>
-                <td><input type="text" class="form-control form-control-glass form-control-sm abs-ket" data-nis="${s.nis}" value="${escapeHtml(ket)}" placeholder="-" /></td>
-              </tr>`;
-            }).join('')}
-          </tbody>
-        </table>
-      </div>
-      <div class="d-flex justify-content-end mt-3">
-        <button class="btn btn-gold" onclick="saveAbsensi()">
-          <i class="fas fa-save me-1"></i>Simpan Absensi
-        </button>
-      </div>
-    `;
-    document.getElementById('absensiTable').innerHTML = html;
-  }
-
-  async function saveAbsensi() {
-    const tanggal = document.getElementById('absTanggal').value;
-    const kelas   = document.getElementById('absKelas').value;
-    const mapel   = document.getElementById('absMapel').value;
-    if (!tanggal || !kelas || !mapel) return showToast('Lengkapi semua field','warning');
-    const records = [];
-    document.querySelectorAll('.abs-status').forEach(sel => {
-      const nis  = sel.dataset.nis;
-      const nama = sel.dataset.nama;
-      const status = sel.value;
-      const ket  = document.querySelector(`.abs-ket[data-nis="${nis}"]`).value;
-      records.push({ tanggal, kelas, mapel, nis, nama_siswa: nama, status, keterangan: ket });
-    });
-    showLoading('Menyimpan...');
-    const res = await api('saveAbsensi', { records, replace:true });
-    hideLoading();
-    if (res.success) showToast(res.message,'success');
-    else showToast(res.error,'danger');
-  }
-
-  /* ============================================================
-     VIEW: NILAI (Leger + Riwayat)
-     ============================================================ */
-  async function viewNilai() {
-    showLoading('Memuat...');
-    const [kelasRes, mapelRes] = await Promise.all([
-      api('getKelas'),
-      api('getMapel')
-    ]);
-    hideLoading();
-    const kelasOpt = kelasRes.data.map(k => `<option value="${k.nama_kelas}">${escapeHtml(k.nama_kelas)}</option>`).join('');
-    const mapelOpt = mapelRes.data.map(m => `<option value="${m.kode_mapel}">${escapeHtml(m.nama_mapel)}</option>`).join('');
-    document.getElementById('viewContainer').innerHTML = `
-      <div class="glass content-card">
-        <h6 class="mb-3"><i class="fas fa-clipboard-list me-2 gold-text"></i>Input Penilaian</h6>
-        <div class="row g-2 mb-3">
-          <div class="col-md-3">
-            <label class="form-label-glass">Kelas</label>
-            <select class="form-control form-control-glass" id="nilaiKelas">${kelasOpt}</select>
-          </div>
-          <div class="col-md-3">
-            <label class="form-label-glass">Mapel</label>
-            <select class="form-control form-control-glass" id="nilaiMapel">${mapelOpt}</select>
-          </div>
-          <div class="col-md-3">
-            <label class="form-label-glass">Jenis Nilai</label>
-            <select class="form-control form-control-glass" id="nilaiJenis">
-              <option value="Tugas">Tugas</option>
-              <option value="UTS">UTS</option>
-              <option value="UAS">UAS</option>
-              <option value="Harian">Harian</option>
-              <option value="Psikomotor">Psikomotor</option>
-            </select>
-          </div>
-          <div class="col-md-3 d-flex align-items-end">
-            <button class="btn btn-platinum w-100" onclick="loadNilaiSiswa()">
-              <i class="fas fa-search me-1"></i>Muat Leger
-            </button>
-          </div>
-        </div>
-        <div id="nilaiTable">
-          <div class="empty-state"><i class="fas fa-info-circle"></i><div>Pilih kelas & mapel untuk memuat leger</div></div>
-        </div>
-      </div>
-    `;
-  }
-
-  async function loadNilaiSiswa() {
-    const kelas = document.getElementById('nilaiKelas').value;
-    const mapel = document.getElementById('nilaiMapel').value;
-    const jenis = document.getElementById('nilaiJenis').value;
-    if (!kelas || !mapel) return;
-    showLoading('Memuat leger...');
-    const [siswaRes, legerRes, riwayatRes] = await Promise.all([
-      api('getSiswa', { kelas }),
-      api('getLeger', { kelas, mapel }),
-      api('getNilai', { kelas, mapel, jenis })
-    ]);
-    hideLoading();
-    if (!siswaRes.success) return;
-    const leger = legerRes.success ? legerRes.data : [];
-    const riwayat = riwayatRes.success ? riwayatRes.data : [];
-    const jenisList = legerRes.success ? legerRes.jenis : [];
-
-    document.getElementById('nilaiTable').innerHTML = `
-      <ul class="nav nav-tabs mb-3" id="nilaiTabs">
-        <li class="nav-item">
-          <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-input">
-            <i class="fas fa-pen me-1"></i>Input Nilai ${escapeHtml(jenis)}
-          </button>
-        </li>
-        <li class="nav-item">
-          <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-leger">
-            <i class="fas fa-table me-1"></i>Leger Dinamis
-          </button>
-        </li>
-        <li class="nav-item">
-          <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-riwayat">
-            <i class="fas fa-history me-1"></i>Riwayat
-          </button>
-        </li>
-      </ul>
-      <div class="tab-content">
-        <div class="tab-pane fade show active" id="tab-input">
-          <div class="table-responsive">
-            <table class="table table-glass align-middle">
-              <thead><tr><th>No</th><th>NIS</th><th>Nama</th><th style="width:140px;">Nilai</th><th>Keterangan</th></tr></thead>
-              <tbody>
-                ${siswaRes.data.map((s,i) => {
-                  const ex = riwayat.find(r => r.nis === s.nis);
-                  return `<tr>
-                    <td>${i+1}</td><td>${escapeHtml(s.nis)}</td><td>${escapeHtml(s.nama)}</td>
-                    <td><input type="number" min="0" max="100" class="form-control form-control-glass form-control-sm nilai-val" data-nis="${s.nis}" data-nama="${escapeHtml(s.nama)}" value="${ex ? ex.nilai : ''}" /></td>
-                    <td><input type="text" class="form-control form-control-glass form-control-sm nilai-ket" data-nis="${s.nis}" value="${ex ? escapeHtml(ex.keterangan) : ''}" /></td>
-                  </tr>`;
-                }).join('')}
-              </tbody>
-            </table>
-          </div>
-          <div class="d-flex justify-content-end gap-2 mt-3">
-            <button class="btn btn-platinum" onclick="printLegerPDF()">
-              <i class="fas fa-print me-1"></i>Cetak Leger
-            </button>
-            <button class="btn btn-gold" onclick="saveNilai()">
-              <i class="fas fa-save me-1"></i>Simpan
-            </button>
-          </div>
-        </div>
-        <div class="tab-pane fade" id="tab-leger">
-          <div class="table-responsive">
-            <table class="table table-glass align-middle">
-              <thead><tr><th>No</th><th>NIS</th><th>Nama</th>${jenisList.map(j=>`<th class="text-center">${escapeHtml(j)}</th>`).join('')}<th class="text-center">Rata-rata</th></tr></thead>
-              <tbody>
-                ${leger.length === 0 ? `<tr><td colspan="${4+jenisList.length}" class="text-center text-muted">Belum ada nilai</td></tr>` :
-                  leger.map((l,i) => `<tr>
-                    <td>${i+1}</td><td>${escapeHtml(l.nis)}</td><td>${escapeHtml(l.nama_siswa)}</td>
-                    ${jenisList.map(j => `<td class="text-center">${l[j]||0}</td>`).join('')}
-                    <td class="text-center"><strong class="gold-text">${l.rata_rata||0}</strong></td>
-                  </tr>`).join('')}
-              </tbody>
-            </table>
-          </div>
-          <div class="d-flex justify-content-end mt-3">
-            <button class="btn btn-platinum" onclick="printLegerPDF()">
-              <i class="fas fa-print me-1"></i>Cetak Leger PDF
-            </button>
-          </div>
-        </div>
-        <div class="tab-pane fade" id="tab-riwayat">
-          <div class="table-responsive">
-            <table class="table table-glass align-middle">
-              <thead><tr><th>Tanggal</th><th>Kelas</th><th>Mapel</th><th>NIS</th><th>Nama</th><th>Jenis</th><th class="text-center">Nilai</th><th>Guru</th></tr></thead>
-              <tbody>
-                ${riwayat.length === 0 ? `<tr><td colspan="8" class="text-center text-muted">Belum ada riwayat</td></tr>` :
-                  riwayat.map(r => `<tr>
-                    <td>${formatDate(r.tanggal)}</td><td>${escapeHtml(r.kelas)}</td><td>${escapeHtml(r.mapel)}</td>
-                    <td>${escapeHtml(r.nis)}</td><td>${escapeHtml(r.nama_siswa)}</td><td>${escapeHtml(r.jenis_nilai)}</td>
-                    <td class="text-center"><strong>${escapeHtml(r.nilai)}</strong></td><td>${escapeHtml(r.guru_input)}</td>
-                  </tr>`).join('')}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    `;
-  }
-
-  async function saveNilai() {
-    const kelas = document.getElementById('nilaiKelas').value;
-    const mapel = document.getElementById('nilaiMapel').value;
-    const jenis = document.getElementById('nilaiJenis').value;
-    const tanggal = todayStr();
-    const records = [];
-    document.querySelectorAll('.nilai-val').forEach(inp => {
-      const v = inp.value.trim();
-      if (v === '') return;
-      records.push({
-        tanggal, kelas, mapel, jenis_nilai: jenis,
-        nis: inp.dataset.nis, nama_siswa: inp.dataset.nama,
-        nilai: parseFloat(v),
-        keterangan: document.querySelector(`.nilai-ket[data-nis="${inp.dataset.nis}"]`).value
-      });
-    });
-    if (records.length === 0) return showToast('Tidak ada nilai diisi','warning');
-    showLoading('Menyimpan...');
-    const res = await api('saveNilai', { records, replace:true });
-    hideLoading();
-    if (res.success) { showToast(res.message,'success'); loadNilaiSiswa(); }
-    else showToast(res.error,'danger');
-  }
-
-  /* ============================================================
-     VIEW: JADWAL MENGAJAR
-     ============================================================ */
-  async function viewJadwal() {
-    showLoading('Memuat jadwal...');
-    const filter = STATE.user.role === 'guru' ? { guru: STATE.user.nama } : {};
-    const res = await api('getJadwal', filter);
-    hideLoading();
-    const days = ['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
-    const jadwal = res.success ? res.data : [];
-    document.getElementById('viewContainer').innerHTML = `
-      <div class="glass content-card">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-          <h6 class="mb-0"><i class="fas fa-calendar-alt me-2 gold-text"></i>Jadwal Mengajar ${STATE.user.role==='guru'?'- '+escapeHtml(STATE.user.nama):''}</h6>
-          ${STATE.user.role==='admin'?'<button class="btn btn-sm btn-gold" onclick="openJadwalModal()"><i class="fas fa-plus me-1"></i>Tambah</button>':''}
-        </div>
-        <div class="row g-3">
-          ${days.map(hari => {
-            const list = jadwal.filter(j => j.hari === hari).sort((a,b)=>a.jam_ke-b.jam_ke);
-            return `<div class="col-md-6 col-lg-4">
-              <div class="glass p-3 h-100">
-                <div class="d-flex align-items-center gap-2 mb-2">
-                  <i class="fas fa-calendar-day gold-text"></i>
-                  <strong>${hari}</strong>
-                  <span class="badge bg-secondary ms-auto">${list.length}</span>
-                </div>
-                ${list.length === 0 ? '<div class="text-muted" style="font-size:.8rem;">Tidak ada jadwal</div>' :
-                  list.map(j => `<div class="d-flex align-items-center gap-2 py-2 border-bottom border-light border-opacity-25">
-                    <div class="text-center" style="min-width:50px;">
-                      <div class="gold-text" style="font-weight:700;">Jam ${escapeHtml(j.jam_ke)}</div>
-                      <div style="font-size:.7rem;color:rgba(245,245,247,0.55);">${escapeHtml(j.waktu||'')}</div>
-                    </div>
-                    <div class="flex-grow-1">
-                      <div style="font-weight:600;">${escapeHtml(j.mapel)}</div>
-                      <div style="font-size:.75rem;color:rgba(245,245,247,0.6);">${escapeHtml(j.kelas)} &middot; ${escapeHtml(j.guru)}</div>
-                    </div>
-                  </div>`).join('')}
-              </div>
-            </div>`;
-          }).join('')}
-        </div>
-      </div>
-    `;
-  }
-
-  /* ============================================================
-     VIEW: JURNAL AGENDA
-     ============================================================ */
-  async function viewAgenda() {
-    showLoading('Memuat...');
-    const filter = STATE.user.role === 'guru' ? { guru: STATE.user.nama } : {};
-    const [agendaRes, kelasRes, mapelRes] = await Promise.all([
-      api('getAgenda', filter),
-      api('getKelas'),
-      api('getMapel')
-    ]);
-    hideLoading();
-    const kelasOpt = kelasRes.data.map(k => `<option value="${k.nama_kelas}">${escapeHtml(k.nama_kelas)}</option>`).join('');
-    const mapelOpt = mapelRes.data.map(m => `<option value="${m.kode_mapel}">${escapeHtml(m.nama_mapel)}</option>`).join('');
-    const list = agendaRes.success ? agendaRes.data : [];
-    document.getElementById('viewContainer').innerHTML = `
-      <div class="glass content-card">
-        <div class="d-flex justify-content-between flex-wrap align-items-center mb-3">
-          <h6 class="mb-0"><i class="fas fa-book-open me-2 gold-text"></i>Jurnal Agenda Mengajar</h6>
-          <div class="d-flex gap-2">
-            <button class="btn btn-sm btn-platinum" onclick="printAgendaPDF()">
-              <i class="fas fa-print me-1"></i>Cetak Jurnal
-            </button>
-            <button class="btn btn-sm btn-gold" onclick="openAgendaModal()">
-              <i class="fas fa-plus me-1"></i>Tambah
-            </button>
-          </div>
-        </div>
-        <div class="table-responsive">
-          <table class="table table-glass align-middle">
-            <thead><tr><th>Tanggal</th><th>Kelas</th><th>Mapel</th><th>Jam</th><th>Materi</th><th>Kegiatan</th><th>Catatan</th><th>Aksi</th></tr></thead>
-            <tbody>
-              ${list.length === 0 ? `<tr><td colspan="8" class="text-center text-muted">Belum ada catatan agenda</td></tr>` :
-                list.map(a => `<tr>
-                  <td>${formatDate(a.tanggal)}</td><td>${escapeHtml(a.kelas)}</td><td>${escapeHtml(a.mapel)}</td>
-                  <td>${escapeHtml(a.jam_ke||'-')}</td><td>${escapeHtml(a.materi||'-')}</td>
-                  <td>${escapeHtml(a.kegiatan||'-')}</td><td>${escapeHtml(a.catatan||'-')}</td>
-                  <td>
-                    <button class="btn btn-sm btn-outline-light" onclick="openAgendaModal('${a.id}')"><i class="fas fa-edit"></i></button>
-                    <button class="btn btn-sm btn-outline-danger" onclick="deleteAgenda('${a.id}')"><i class="fas fa-trash"></i></button>
-                  </td>
-                </tr>`).join('')}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    `;
-    // simpan cache untuk modal
-    STATE.cache.lastAgendaList = list;
-    STATE.cache.kelasOpt = kelasOpt;
-    STATE.cache.mapelOpt = mapelOpt;
-  }
-
-  async function openAgendaModal(id) {
-    const a = id ? STATE.cache.lastAgendaList.find(x => x.id === id) : {};
-    const html = `
-      <input type="hidden" id="agdId" value="${a.id||''}" />
-      <div class="row g-3">
-        <div class="col-md-4">
-          <label class="form-label-glass">Tanggal</label>
-          <input type="date" class="form-control form-control-glass" id="agdTanggal" value="${a.tanggal ? a.tanggal.split('/').reverse().join('-') : todayStr()}" />
-        </div>
-        <div class="col-md-4">
-          <label class="form-label-glass">Kelas</label>
-          <select class="form-control form-control-glass" id="agdKelas">${STATE.cache.kelasOpt}</select>
-        </div>
-        <div class="col-md-4">
-          <label class="form-label-glass">Mapel</label>
-          <select class="form-control form-control-glass" id="agdMapel">${STATE.cache.mapelOpt}</select>
-        </div>
-        <div class="col-md-2">
-          <label class="form-label-glass">Jam ke-</label>
-          <input type="number" min="1" max="12" class="form-control form-control-glass" id="agdJam" value="${a.jam_ke||'1'}" />
-        </div>
-        <div class="col-md-10">
-          <label class="form-label-glass">Materi</label>
-          <input type="text" class="form-control form-control-glass" id="agdMateri" value="${escapeHtml(a.materi||'')}" />
-        </div>
-        <div class="col-12">
-          <label class="form-label-glass">Kegiatan Pembelajaran</label>
-          <textarea class="form-control form-control-glass" id="agdKegiatan" rows="3">${escapeHtml(a.kegiatan||'')}</textarea>
-        </div>
-        <div class="col-12">
-          <label class="form-label-glass">Catatan</label>
-          <textarea class="form-control form-control-glass" id="agdCatatan" rows="2">${escapeHtml(a.catatan||'')}</textarea>
-        </div>
-      </div>
-    `;
-    showModal(a.id ? 'Edit Agenda' : 'Tambah Agenda', html, async () => {
-      const data = {
-        id: document.getElementById('agdId').value || null,
-        tanggal: document.getElementById('agdTanggal').value,
-        kelas: document.getElementById('agdKelas').value,
-        mapel: document.getElementById('agdMapel').value,
-        jam_ke: document.getElementById('agdJam').value,
-        materi: document.getElementById('agdMateri').value,
-        kegiatan: document.getElementById('agdKegiatan').value,
-        catatan: document.getElementById('agdCatatan').value,
-        guru: STATE.user.nama
-      };
-      showLoading('Menyimpan...');
-      const res = await api('saveAgenda', data);
-      hideLoading();
-      if (res.success) { showToast(res.message,'success'); closeModal(); viewAgenda(); }
-      else showToast(res.error,'danger');
-    });
-    if (a.kelas) document.getElementById('agdKelas').value = a.kelas;
-    if (a.mapel) document.getElementById('agdMapel').value = a.mapel;
-  }
-
-  async function deleteAgenda(id) {
-    if (!confirm('Hapus agenda ini?')) return;
-    const res = await api('deleteAgenda', { id });
-    if (res.success) { showToast('Dihapus','success'); viewAgenda(); }
-    else showToast(res.error,'danger');
-  }
-
-  /* ============================================================
-     VIEW: BIMBINGAN WALI
-     ============================================================ */
-  async function viewBimbingan() {
-    showLoading('Memuat...');
-    const filter = STATE.user.role === 'guru' && STATE.user.kelas_wali
-      ? { wali_kelas: STATE.user.nama }
-      : {};
-    const res = await api('getBimbingan', filter);
-    hideLoading();
-    const list = res.success ? res.data : [];
-    document.getElementById('viewContainer').innerHTML = `
-      <div class="glass content-card">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-          <h6 class="mb-0"><i class="fas fa-hands-helping me-2 gold-text"></i>Catatan Bimbingan Wali</h6>
-          <button class="btn btn-sm btn-gold" onclick="openBimbinganModal()">
-            <i class="fas fa-plus me-1"></i>Tambah
-          </button>
-        </div>
-        <div class="table-responsive">
-          <table class="table table-glass align-middle">
-            <thead><tr><th>Tanggal</th><th>NIS</th><th>Nama</th><th>Kelas</th><th>Jenis</th><th>Catatan</th><th>Tindakan</th><th>Aksi</th></tr></thead>
-            <tbody>
-              ${list.length === 0 ? `<tr><td colspan="8" class="text-center text-muted">Belum ada catatan</td></tr>` :
-                list.map(b => `<tr>
-                  <td>${formatDate(b.tanggal)}</td><td>${escapeHtml(b.nis)}</td><td>${escapeHtml(b.nama_siswa)}</td>
-                  <td>${escapeHtml(b.kelas)}</td><td>${escapeHtml(b.jenis_bimbingan)}</td>
-                  <td>${escapeHtml(b.catatan||'-')}</td><td>${escapeHtml(b.tindakan||'-')}</td>
-                  <td>
-                    <button class="btn btn-sm btn-outline-light" onclick="openBimbinganModal('${b.id}')"><i class="fas fa-edit"></i></button>
-                    <button class="btn btn-sm btn-outline-danger" onclick="deleteBimbingan('${b.id}')"><i class="fas fa-trash"></i></button>
-                  </td>
-                </tr>`).join('')}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    `;
-    STATE.cache.lastBimbingan = list;
-  }
-
-  async function openBimbinganModal(id) {
-    const b = id ? STATE.cache.lastBimbingan.find(x => x.id === id) : {};
-    const html = `
-      <input type="hidden" id="bimId" value="${b.id||''}" />
-      <div class="row g-3">
-        <div class="col-md-4">
-          <label class="form-label-glass">Tanggal</label>
-          <input type="date" class="form-control form-control-glass" id="bimTanggal" value="${b.tanggal ? b.tanggal.split('/').reverse().join('-') : todayStr()}" />
-        </div>
-        <div class="col-md-4">
-          <label class="form-label-glass">NIS</label>
-          <input type="text" class="form-control form-control-glass" id="bimNis" value="${escapeHtml(b.nis||'')}" />
-        </div>
-        <div class="col-md-4">
-          <label class="form-label-glass">Nama Siswa</label>
-          <input type="text" class="form-control form-control-glass" id="bimNama" value="${escapeHtml(b.nama_siswa||'')}" />
-        </div>
-        <div class="col-md-4">
-          <label class="form-label-glass">Kelas</label>
-          <input type="text" class="form-control form-control-glass" id="bimKelas" value="${escapeHtml(b.kelas||STATE.user.kelas_wali||'')}" />
-        </div>
-        <div class="col-md-4">
-          <label class="form-label-glass">Jenis Bimbingan</label>
-          <select class="form-control form-control-glass" id="bimJenis">
-            <option ${b.jenis_bimbingan==='Akademik'?'selected':''}>Akademik</option>
-            <option ${b.jenis_bimbingan==='Pribadi'?'selected':''}>Pribadi</option>
-            <option ${b.jenis_bimbingan==='Sosial'?'selected':''}>Sosial</option>
-            <option ${b.jenis_bimbingan==='Karir'?'selected':''}>Karir</option>
-          </select>
-        </div>
-        <div class="col-md-4">
-          <label class="form-label-glass">Tindakan</label>
-          <input type="text" class="form-control form-control-glass" id="bimTindakan" value="${escapeHtml(b.tindakan||'')}" />
-        </div>
-        <div class="col-12">
-          <label class="form-label-glass">Catatan</label>
-          <textarea class="form-control form-control-glass" id="bimCatatan" rows="3">${escapeHtml(b.catatan||'')}</textarea>
-        </div>
-      </div>
-    `;
-    showModal(b.id ? 'Edit Bimbingan' : 'Tambah Bimbingan', html, async () => {
-      const data = {
-        id: document.getElementById('bimId').value || null,
-        tanggal: document.getElementById('bimTanggal').value,
-        nis: document.getElementById('bimNis').value,
-        nama_siswa: document.getElementById('bimNama').value,
-        kelas: document.getElementById('bimKelas').value,
-        jenis_bimbingan: document.getElementById('bimJenis').value,
-        tindakan: document.getElementById('bimTindakan').value,
-        catatan: document.getElementById('bimCatatan').value,
-        wali_kelas: STATE.user.nama
-      };
-      showLoading('Menyimpan...');
-      const res = await api('saveBimbingan', data);
-      hideLoading();
-      if (res.success) { showToast(res.message,'success'); closeModal(); viewBimbingan(); }
-      else showToast(res.error,'danger');
-    });
-  }
-
-  async function deleteBimbingan(id) {
-    if (!confirm('Hapus catatan ini?')) return;
-    const res = await api('deleteBimbingan', { id });
-    if (res.success) { showToast('Dihapus','success'); viewBimbingan(); }
-    else showToast(res.error,'danger');
-  }
-
-  /* ============================================================
-     VIEW: E-PERANGKAT AJAR (upload mandiri)
-     ============================================================ */
-  const JENIS_PERANGKAT = ['Silabus','ATP','Prota','Promes','ModulAjar'];
-
-  async function viewEPerangkat() {
-    showLoading('Memuat...');
-    const filter = STATE.user.role === 'guru' ? { guru_id: STATE.user.id } : {};
-    const res = await api('getPerangkat', filter);
-    hideLoading();
-    const list = res.success ? res.data : [];
-    const cfg = STATE.config;
-    document.getElementById('viewContainer').innerHTML = `
-      <div class="glass content-card mb-3">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-          <h6 class="mb-0"><i class="fas fa-folder-open me-2 gold-text"></i>E-Perangkat Ajar</h6>
-          <button class="btn btn-sm btn-gold" onclick="openUploadModal()">
-            <i class="fas fa-upload me-1"></i>Upload Dokumen
-          </button>
-        </div>
-        <div class="row g-2 mb-3">
-          ${JENIS_PERANGKAT.map(j => {
-            const dok = list.find(d => d.jenis === j);
-            const status = dok ? dok.status : 'belum';
-            const badge = dok ? `<span class="badge badge-status badge-${dok.status}">${dok.status}</span>` : '<span class="badge bg-secondary">belum upload</span>';
-            return `<div class="col-md-6 col-lg-4">
-              <div class="glass p-3 h-100">
-                <div class="d-flex justify-content-between align-items-start mb-2">
-                  <div>
-                    <div style="font-weight:700;">${j === 'ModulAjar' ? 'Modul Ajar / RPP' : j}</div>
-                    <div style="font-size:.7rem;color:rgba(245,245,247,0.6);">${dok ? escapeHtml(dok.mapel)+' - '+escapeHtml(dok.kelas) : 'Belum ada dokumen'}</div>
-                  </div>
-                  ${badge}
-                </div>
-                ${dok ? `
-                  <div class="text-truncate" style="font-size:.75rem;color:rgba(245,245,247,0.7);">
-                    <i class="fas fa-file-pdf me-1"></i>${escapeHtml(dok.file_name)}
-                  </div>
-                  ${dok.catatan_validasi ? `<div class="mt-2 p-2 rounded" style="background:rgba(255,140,0,0.12);font-size:.75rem;">
-                    <i class="fas fa-comment me-1"></i>${escapeHtml(dok.catatan_validasi)}
-                  </div>`:''}
-                  <div class="d-flex gap-1 mt-2">
-                    <a href="${dok.file_url}" target="_blank" class="btn btn-sm btn-outline-light"><i class="fas fa-eye"></i> Lihat</a>
-                    ${STATE.user.role==='admin' || dok.guru_id === STATE.user.id ? `<button class="btn btn-sm btn-outline-danger" onclick="deletePerangkat('${dok.id}')"><i class="fas fa-trash"></i></button>`:''}
-                  </div>
-                ` : `<div class="text-muted" style="font-size:.78rem;">Belum diupload</div>`}
-              </div>
-            </div>`;
-          }).join('')}
-        </div>
-      </div>
-    `;
-    STATE.cache.lastPerangkat = list;
-  }
-
-  async function openUploadModal() {
-    const [mapelRes, kelasRes] = await Promise.all([
-      api('getMapel'),
-      api('getKelas')
-    ]);
-    const mapelOpt = mapelRes.data.map(m => `<option value="${m.kode_mapel}">${escapeHtml(m.nama_mapel)}</option>`).join('');
-    const kelasOpt = kelasRes.data.map(k => `<option value="${k.nama_kelas}">${escapeHtml(k.nama_kelas)}</option>`).join('');
-    const html = `
-      <div class="row g-3">
-        <div class="col-md-6">
-          <label class="form-label-glass">Jenis Dokumen</label>
-          <select class="form-control form-control-glass" id="upJenis">
-            ${JENIS_PERANGKAT.map(j => `<option value="${j}">${j === 'ModulAjar' ? 'Modul Ajar / RPP' : j}</option>`).join('')}
-          </select>
-        </div>
-        <div class="col-md-6">
-          <label class="form-label-glass">Mapel</label>
-          <select class="form-control form-control-glass" id="upMapel">${mapelOpt}</select>
-        </div>
-        <div class="col-md-6">
-          <label class="form-label-glass">Kelas</label>
-          <select class="form-control form-control-glass" id="upKelas">${kelasOpt}</select>
-        </div>
-        <div class="col-md-6">
-          <label class="form-label-glass">File PDF</label>
-          <input type="file" class="form-control form-control-glass" id="upFile" accept="application/pdf" required />
-          <small style="color:rgba(245,245,247,0.5);font-size:.7rem;">Max 25MB, format PDF</small>
-        </div>
-      </div>
-    `;
-    showModal('Upload Perangkat Ajar', html, async () => {
-      const file = document.getElementById('upFile').files[0];
-      if (!file) return showToast('Pilih file PDF','warning');
-      if (file.size > 25 * 1024 * 1024) return showToast('Ukuran file maksimal 25MB','warning');
-      showLoading('Mengupload...');
-      const base64 = await fileToBase64(file);
-      const res = await api('uploadPerangkat', {
-        guru_id: STATE.user.id,
-        guru_nama: STATE.user.nama,
-        mapel: document.getElementById('upMapel').value,
-        kelas: document.getElementById('upKelas').value,
-        jenis: document.getElementById('upJenis').value,
-        file_name: file.name,
-        file_base64: base64,
-        mime: file.type
-      });
-      hideLoading();
-      if (res.success) { showToast(res.message,'success'); closeModal(); viewEPerangkat(); }
-      else showToast(res.error,'danger');
-    });
-  }
-
-  function fileToBase64(file) {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result.split(',')[1]);
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-  }
-
-  async function deletePerangkat(id) {
-    if (!confirm('Hapus dokumen ini?')) return;
-    const res = await api('deletePerangkat', { id });
-    if (res.success) { showToast('Dihapus','success'); viewEPerangkat(); }
-    else showToast(res.error,'danger');
-  }
-
-  /* ============================================================
-     VIEW: PANDUAN MENAJAR (repositori)
-     ============================================================ */
-  async function viewPanduan() {
-    showLoading('Memuat...');
-    const res = await api('getPanduan');
-    hideLoading();
-    const list = res.success ? res.data : [];
-    document.getElementById('viewContainer').innerHTML = `
-      <div class="glass content-card">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-          <h6 class="mb-0"><i class="fas fa-book me-2 gold-text"></i>Panduan Mengajar</h6>
-          ${STATE.user.role==='admin' ? '<button class="btn btn-sm btn-gold" onclick="openPanduanModal()"><i class="fas fa-plus me-1"></i>Tambah</button>':''}
-        </div>
-        <div class="row g-3">
-          ${list.length === 0 ? `<div class="col-12"><div class="empty-state"><i class="fas fa-book"></i><div>Belum ada panduan</div></div></div>` :
-            list.map(p => `<div class="col-md-6 col-lg-4">
-              <div class="glass p-3 h-100">
-                <div class="d-flex align-items-center gap-2 mb-2">
-                  <i class="fas ${p.jenis==='Buku Teks'?'fa-book':p.jenis==='Regulasi'?'fa-gavel':'fa-link'} gold-text fa-lg"></i>
-                  <div class="flex-grow-1">
-                    <div style="font-weight:700;">${escapeHtml(p.judul)}</div>
-                    <span class="badge bg-secondary">${escapeHtml(p.jenis)}</span>
-                  </div>
-                </div>
-                <div style="font-size:.8rem;color:rgba(245,245,247,0.7);min-height:32px;">${escapeHtml(p.deskripsi||'')}</div>
-                <div class="d-flex gap-1 mt-2">
-                  ${p.link_url ? `<a href="${p.link_url}" target="_blank" class="btn btn-sm btn-outline-light"><i class="fas fa-external-link-alt"></i> Buka</a>`:''}
-                  ${p.file_url ? `<a href="${p.file_url}" target="_blank" class="btn btn-sm btn-outline-light"><i class="fas fa-file-pdf"></i> PDF</a>`:''}
-                  ${STATE.user.role==='admin' ? `<button class="btn btn-sm btn-outline-danger ms-auto" onclick="deletePanduan('${p.id}')"><i class="fas fa-trash"></i></button>`:''}
-                </div>
-              </div>
-            </div>`).join('')}
-        </div>
-      </div>
-    `;
-  }
-
-  async function openPanduanModal() {
-    const html = `
-      <div class="row g-3">
-        <div class="col-md-8">
-          <label class="form-label-glass">Judul</label>
-          <input type="text" class="form-control form-control-glass" id="pndJudul" />
-        </div>
-        <div class="col-md-4">
-          <label class="form-label-glass">Jenis</label>
-          <select class="form-control form-control-glass" id="pndJenis">
-            <option>Buku Teks</option>
-            <option>Regulasi Kurikulum</option>
-            <option>Link Media Pembelajaran</option>
-          </select>
-        </div>
-        <div class="col-md-8">
-          <label class="form-label-glass">Link URL (jika ada)</label>
-          <input type="url" class="form-control form-control-glass" id="pndLink" placeholder="https://..." />
-        </div>
-        <div class="col-md-4">
-          <label class="form-label-glass">File PDF (opsional)</label>
-          <input type="file" class="form-control form-control-glass" id="pndFile" accept="application/pdf" />
-        </div>
-        <div class="col-12">
-          <label class="form-label-glass">Deskripsi</label>
-          <textarea class="form-control form-control-glass" id="pndDeskripsi" rows="2"></textarea>
-        </div>
-      </div>
-    `;
-    showModal('Tambah Panduan', html, async () => {
-      const data = {
-        judul: document.getElementById('pndJudul').value,
-        jenis: document.getElementById('pndJenis').value,
-        link_url: document.getElementById('pndLink').value,
-        deskripsi: document.getElementById('pndDeskripsi').value
-      };
-      const file = document.getElementById('pndFile').files[0];
-      if (file) {
-        if (file.size > 25*1024*1024) return showToast('Max 25MB','warning');
-        data.file_base64 = await fileToBase64(file);
-        data.mime = file.type;
-      }
-      showLoading('Menyimpan...');
-      const res = await api('addPanduan', data);
-      hideLoading();
-      if (res.success) { showToast(res.message,'success'); closeModal(); viewPanduan(); }
-      else showToast(res.error,'danger');
-    });
-  }
-
-  async function deletePanduan(id) {
-    if (!confirm('Hapus panduan ini?')) return;
-    const res = await api('deletePanduan', { id });
-    if (res.success) { showToast('Dihapus','success'); viewPanduan(); }
-    else showToast(res.error,'danger');
-  }
-
-  /* ============================================================
-     VIEW: REKAP GURU WALI (Admin)
-     ============================================================ */
-  async function viewRekapWali() {
-    showLoading('Memuat...');
-    const res = await api('getRekapWali');
-    hideLoading();
-    const list = res.success ? res.data : [];
-    document.getElementById('viewContainer').innerHTML = `
-      <div class="glass content-card">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-          <h6 class="mb-0"><i class="fas fa-users-cog me-2 gold-text"></i>Rekap Guru Wali</h6>
-          <button class="btn btn-sm btn-platinum" onclick="printRekapWali()">
-            <i class="fas fa-print me-1"></i>Cetak
-          </button>
-        </div>
-        <div class="table-responsive">
-          <table class="table table-glass align-middle">
-            <thead><tr><th>No</th><th>Nama Guru</th><th>NIP</th><th>Mapel</th><th>Rombel</th><th class="text-center">Jumlah Siswa</th></tr></thead>
-            <tbody>
-              ${list.length === 0 ? `<tr><td colspan="6" class="text-center text-muted">Belum ada data</td></tr>` :
-                list.map((r,i) => `<tr>
-                  <td>${i+1}</td><td>${escapeHtml(r.nama_guru)}</td><td>${escapeHtml(r.nip||'-')}</td>
-                  <td>${escapeHtml(r.mapel||'-')}</td><td>${escapeHtml(r.rombel)}</td>
-                  <td class="text-center">${r.jml_siswa}</td>
-                </tr>`).join('')}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    `;
-    STATE.cache.lastRekapWali = list;
-  }
-
-  /* ============================================================
-     VIEW: MANAJEMEN USER (Admin)
-     ============================================================ */
-  async function viewUsers() {
-    showLoading('Memuat...');
-    const [uRes, kRes, mRes] = await Promise.all([
-      api('getUsers'), api('getKelas'), api('getMapel')
-    ]);
-    hideLoading();
-    const list = uRes.success ? uRes.data : [];
-    STATE.cache.kelas = kRes.data;
-    STATE.cache.mapel = mRes.data;
-    document.getElementById('viewContainer').innerHTML = `
-      <div class="glass content-card">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-          <h6 class="mb-0"><i class="fas fa-user-shield me-2 gold-text"></i>Manajemen User</h6>
-          <button class="btn btn-sm btn-gold" onclick="openUserModal()">
-            <i class="fas fa-plus me-1"></i>Tambah User
-          </button>
-        </div>
-        <div class="table-responsive">
-          <table class="table table-glass align-middle">
-            <thead><tr><th>Nama</th><th>Username</th><th>Role</th><th>NIP</th><th>Kelas Wali</th><th>Mapel</th><th>Aksi</th></tr></thead>
-            <tbody>
-              ${list.map(u => `<tr>
-                <td>${escapeHtml(u.nama)}</td><td>${escapeHtml(u.username)}</td>
-                <td><span class="badge ${u.role==='admin'?'badge-approved':'badge-pending'}">${u.role}</span></td>
-                <td>${escapeHtml(u.nip||'-')}</td><td>${escapeHtml(u.kelas_wali||'-')}</td><td>${escapeHtml(u.mapel_ajar||'-')}</td>
-                <td>
-                  <button class="btn btn-sm btn-outline-light" onclick="openUserModal('${u.id}')"><i class="fas fa-edit"></i></button>
-                  <button class="btn btn-sm btn-outline-danger" onclick="deleteUser('${u.id}','${escapeHtml(u.username)}')"><i class="fas fa-trash"></i></button>
-                </td>
-              </tr>`).join('')}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    `;
-    STATE.cache.lastUsers = list;
-  }
-
-  async function openUserModal(id) {
-    const u = id ? STATE.cache.lastUsers.find(x => x.id === id) : {};
-    const kelasOpt = STATE.cache.kelas.map(k => `<option value="${k.nama_kelas}" ${u.kelas_wali===k.nama_kelas?'selected':''}>${escapeHtml(k.nama_kelas)}</option>`).join('');
-    const mapelOpt = STATE.cache.mapel.map(m => `<option value="${m.kode_mapel}" ${u.mapel_ajar===m.kode_mapel?'selected':''}>${escapeHtml(m.nama_mapel)}</option>`).join('');
-    const html = `
-      <input type="hidden" id="usrId" value="${u.id||''}" />
-      <div class="row g-3">
-        <div class="col-md-6">
-          <label class="form-label-glass">Nama Lengkap</label>
-          <input type="text" class="form-control form-control-glass" id="usrNama" value="${escapeHtml(u.nama||'')}" />
-        </div>
-        <div class="col-md-6">
-          <label class="form-label-glass">Username</label>
-          <input type="text" class="form-control form-control-glass" id="usrUsername" value="${escapeHtml(u.username||'')}" ${u.id?'readonly':''} />
-        </div>
-        ${!u.id ? `<div class="col-md-6">
-          <label class="form-label-glass">Password</label>
-          <input type="text" class="form-control form-control-glass" id="usrPassword" value="123456" />
-        </div>`:''}
-        <div class="col-md-6">
-          <label class="form-label-glass">Role</label>
-          <select class="form-control form-control-glass" id="usrRole">
-            <option value="guru" ${u.role==='guru'?'selected':''}>Guru</option>
-            <option value="admin" ${u.role==='admin'?'selected':''}>Admin</option>
-          </select>
-        </div>
-        <div class="col-md-6">
-          <label class="form-label-glass">NIP</label>
-          <input type="text" class="form-control form-control-glass" id="usrNip" value="${escapeHtml(u.nip||'')}" />
-        </div>
-        <div class="col-md-6">
-          <label class="form-label-glass">Email</label>
-          <input type="email" class="form-control form-control-glass" id="usrEmail" value="${escapeHtml(u.email||'')}" />
-        </div>
-        <div class="col-md-6">
-          <label class="form-label-glass">Kelas Wali</label>
-          <select class="form-control form-control-glass" id="usrKelasWali"><option value="">- Tidak -</option>${kelasOpt}</select>
-        </div>
-        <div class="col-md-6">
-          <label class="form-label-glass">Mapel Ajar</label>
-          <select class="form-control form-control-glass" id="usrMapel"><option value="">- Tidak -</option>${mapelOpt}</select>
-        </div>
-      </div>
-    `;
-    showModal(u.id ? 'Edit User' : 'Tambah User', html, async () => {
-      const data = {
-        id: document.getElementById('usrId').value || null,
-        nama: document.getElementById('usrNama').value,
-        username: document.getElementById('usrUsername').value,
-        role: document.getElementById('usrRole').value,
-        nip: document.getElementById('usrNip').value,
-        email: document.getElementById('usrEmail').value,
-        kelas_wali: document.getElementById('usrKelasWali').value,
-        mapel_ajar: document.getElementById('usrMapel').value
-      };
-      if (!u.id) data.password = document.getElementById('usrPassword').value;
-      showLoading('Menyimpan...');
-      const res = u.id ? await api('updateUser', data) : await api('addUser', data);
-      hideLoading();
-      if (res.success) { showToast(res.message,'success'); closeModal(); viewUsers(); }
-      else showToast(res.error,'danger');
-    });
-  }
-
-  async function deleteUser(id, username) {
-    if (!confirm('Hapus user "'+username+'"?')) return;
-    const res = await api('deleteUser', { id });
-    if (res.success) { showToast('Dihapus','success'); viewUsers(); }
-    else showToast(res.error,'danger');
-  }
-
-  /* ============================================================
-     VIEW: IMPORT SISWA MASSAL (Admin)
-     ============================================================ */
-  function viewImportSiswa() {
-    document.getElementById('viewContainer').innerHTML = `
-      <div class="glass content-card">
-        <h6 class="mb-3"><i class="fas fa-file-import me-2 gold-text"></i>Import Siswa Massal</h6>
-        <div class="row g-3">
-          <div class="col-md-6">
-            <label class="form-label-glass">File CSV</label>
-            <input type="file" class="form-control form-control-glass" id="csvFile" accept=".csv" />
-            <small style="color:rgba(245,245,247,0.55);font-size:.75rem;">
-              Format header: <code>nis,nama,jenis_kelamin,kelas,tempat_lahir,tanggal_lahir,alamat,nama_wali,telp_wali</code>
-            </small>
-          </div>
-          <div class="col-md-6">
-            <label class="form-label-glass">Atau Input Manual (paste CSV di sini)</label>
-            <textarea class="form-control form-control-glass" id="csvText" rows="5" placeholder="nis,nama,jenis_kelamin,kelas,...&#10;2024001,Budi Santoso,L,X-1,..."></textarea>
-          </div>
-        </div>
-        <div class="d-flex gap-2 mt-3">
-          <button class="btn btn-platinum" onclick="downloadCSVTemplate()">
-            <i class="fas fa-download me-1"></i>Download Template
-          </button>
-          <button class="btn btn-gold" onclick="processImport()">
-            <i class="fas fa-upload me-1"></i>Import
-          </button>
-        </div>
-        <div id="importPreview" class="mt-3"></div>
-      </div>
-    `;
-  }
-
-  function downloadCSVTemplate() {
-    const csv = 'nis,nama,jenis_kelamin,kelas,tempat_lahir,tanggal_lahir,alamat,nama_wali,telp_wali\n2024001,Budi Santoso,L,X-1,Jakarta,2008-05-12,Jl. Contoh No.1,Bapak Andi,081234567890\n2024002,Siti Aminah,P,X-1,Bandung,2008-07-23,Jl. Contoh No.2,Ibu Yuni,081234567891';
-    const blob = new Blob([csv], { type:'text/csv' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'template_siswa.csv';
-    a.click();
-  }
-
-  async function processImport() {
-    let csvText = document.getElementById('csvText').value.trim();
-    const file = document.getElementById('csvFile').files[0];
-    if (file) {
-      csvText = await file.text();
-    }
-    if (!csvText) return showToast('Isi CSV atau upload file','warning');
-    const lines = csvText.split(/\r?\n/).filter(l => l.trim());
-    if (lines.length < 2) return showToast('CSV kosong / tidak ada data','warning');
-    const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
-    const siswa = [];
-    for (let i = 1; i < lines.length; i++) {
-      const cols = lines[i].split(',').map(c => c.trim());
-      const obj = {};
-      headers.forEach((h, j) => obj[h] = cols[j] || '');
-      if (obj.nis && obj.nama) {
-        siswa.push({
-          nis: obj.nis,
-          nama: obj.nama,
-          jenis_kelamin: obj.jenis_kelamin || 'L',
-          kelas: obj.kelas || '',
-          tempat_lahir: obj.tempat_lahir || '',
-          tanggal_lahir: obj.tanggal_lahir || '',
-          alamat: obj.alamat || '',
-          nama_wali: obj.nama_wali || '',
-          telp_wali: obj.telp_wali || ''
-        });
-      }
-    }
-    document.getElementById('importPreview').innerHTML = `
-      <div class="alert alert-info">Akan mengimpor <strong>${siswa.length}</strong> siswa</div>
-      <div class="table-responsive">
-        <table class="table table-glass">
-          <thead><tr><th>NIS</th><th>Nama</th><th>L/P</th><th>Kelas</th></tr></thead>
-          <tbody>
-            ${siswa.slice(0,10).map(s => `<tr><td>${escapeHtml(s.nis)}</td><td>${escapeHtml(s.nama)}</td><td>${escapeHtml(s.jenis_kelamin)}</td><td>${escapeHtml(s.kelas)}</td></tr>`).join('')}
-            ${siswa.length > 10 ? `<tr><td colspan="4" class="text-center text-muted">... dan ${siswa.length-10} lainnya</td></tr>`:''}
-          </tbody>
-        </table>
-      </div>
-      <button class="btn btn-gold" onclick="confirmImport()">
-        <i class="fas fa-check me-1"></i>Konfirmasi Import ${siswa.length} Siswa
-      </button>
-    `;
-    STATE.cache.pendingImport = siswa;
-  }
-
-  async function confirmImport() {
-    if (!STATE.cache.pendingImport) return;
-    showLoading('Mengimpor...');
-    const res = await api('importSiswa', { siswa: STATE.cache.pendingImport });
-    hideLoading();
-    if (res.success) {
-      showToast(res.message,'success');
-      STATE.cache.pendingImport = null;
-      viewImportSiswa();
-    } else showToast(res.error,'danger');
-  }
-
-  /* ============================================================
-     VIEW: VALIDASI & MONITORING (Admin)
-     ============================================================ */
-  async function viewValidasi() {
-    showLoading('Memuat...');
-    const res = await api('getPerangkat');
-    hideLoading();
-    const list = res.success ? res.data : [];
-    // group by guru
-    const byGuru = {};
-    list.forEach(p => {
-      if (!byGuru[p.guru_id]) byGuru[p.guru_id] = { nama:p.guru_nama, mapel:p.mapel, items:[] };
-      byGuru[p.guru_id].items.push(p);
-    });
-    document.getElementById('viewContainer').innerHTML = `
-      <div class="glass content-card mb-3">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-          <h6 class="mb-0"><i class="fas fa-tasks me-2 gold-text"></i>Validasi & Monitoring Perangkat Ajar</h6>
-          <button class="btn btn-sm btn-platinum" onclick="printLembarKontrol()">
-            <i class="fas fa-print me-1"></i>Cetak Lembar Kontrol
-          </button>
-        </div>
-        ${Object.keys(byGuru).length === 0 ? `<div class="empty-state"><i class="fas fa-folder-open"></i><div>Belum ada perangkat ajar yang diupload</div></div>` :
-          Object.values(byGuru).map(g => {
-            const kelengkapan = Math.round((g.items.filter(i => i.status==='approved').length / JENIS_PERANGKAT.length) * 100);
-            return `<div class="glass p-3 mb-3">
-              <div class="d-flex justify-content-between flex-wrap align-items-center mb-2">
-                <div>
-                  <strong>${escapeHtml(g.nama)}</strong>
-                  <small style="color:rgba(245,245,247,0.6);">${escapeHtml(g.mapel||'')}</small>
-                </div>
-                <div class="d-flex align-items-center gap-2" style="min-width:200px;">
-                  <div class="progress-glass flex-grow-1"><div class="bar" style="width:${kelengkapan}%"></div></div>
-                  <small>${kelengkapan}%</small>
-                </div>
-              </div>
-              <div class="table-responsive">
-                <table class="table table-glass align-middle mb-0">
-                  <thead><tr><th>Jenis</th><th>File</th><th>Upload</th><th>Status</th><th>Catatan</th><th>Aksi</th></tr></thead>
-                  <tbody>
-                    ${g.items.map(it => `<tr>
-                      <td>${escapeHtml(it.jenis)}</td>
-                      <td><a href="${it.file_url}" target="_blank" style="color:var(--gold-2);"><i class="fas fa-file-pdf me-1"></i>${escapeHtml(it.file_name)}</a></td>
-                      <td>${formatDate(it.tanggal_upload)}</td>
-                      <td><span class="badge badge-status badge-${it.status}">${it.status}</span></td>
-                      <td>${escapeHtml(it.catatan_validasi||'-')}</td>
-                      <td>
-                        <button class="btn btn-sm btn-outline-success" onclick="validatePerangkat('${it.id}','approved')" title="Setujui"><i class="fas fa-check"></i></button>
-                        <button class="btn btn-sm btn-outline-warning" onclick="validatePerangkat('${it.id}','revisi')" title="Revisi"><i class="fas fa-undo"></i></button>
-                        <button class="btn btn-sm btn-outline-danger" onclick="validatePerangkat('${it.id}','rejected')" title="Tolak"><i class="fas fa-times"></i></button>
-                      </td>
-                    </tr>`).join('')}
-                  </tbody>
-                </table>
-              </div>
-            </div>`;
-          }).join('')}
-      </div>
-    `;
-  }
-
-  async function validatePerangkat(id, status) {
-    const catatan = status === 'approved' ? '' : prompt('Catatan untuk guru:');
-    if (catatan === null) return;
-    showLoading('Memproses...');
-    const res = await api('validatePerangkat', { id, status, catatan });
-    hideLoading();
-    if (res.success) { showToast('Status diperbarui','success'); viewValidasi(); }
-    else showToast(res.error,'danger');
-  }
-
-  /* ============================================================
-     VIEW: KONFIGURASI SEKOLAH (Admin)
-     ============================================================ */
-  async function viewConfig() {
-    const cfg = STATE.config;
-    document.getElementById('viewContainer').innerHTML = `
-      <div class="glass content-card">
-        <h6 class="mb-3"><i class="fas fa-cog me-2 gold-text"></i>Konfigurasi Sekolah</h6>
-        <div class="row g-3">
-          <div class="col-md-6"><label class="form-label-glass">Nama Sekolah</label><input type="text" class="form-control form-control-glass" id="cfgNama" value="${escapeHtml(cfg.nama_sekolah||'')}" /></div>
-          <div class="col-md-3"><label class="form-label-glass">NPSN</label><input type="text" class="form-control form-control-glass" id="cfgNpsn" value="${escapeHtml(cfg.npsn||'')}" /></div>
-          <div class="col-md-3"><label class="form-label-glass">Telepon</label><input type="text" class="form-control form-control-glass" id="cfgTelp" value="${escapeHtml(cfg.telepon||'')}" /></div>
-          <div class="col-md-6"><label class="form-label-glass">Alamat</label><input type="text" class="form-control form-control-glass" id="cfgAlamat" value="${escapeHtml(cfg.alamat||'')}" /></div>
-          <div class="col-md-3"><label class="form-label-glass">Email</label><input type="email" class="form-control form-control-glass" id="cfgEmail" value="${escapeHtml(cfg.email||'')}" /></div>
-          <div class="col-md-3"><label class="form-label-glass">Website</label><input type="text" class="form-control form-control-glass" id="cfgWeb" value="${escapeHtml(cfg.website||'')}" /></div>
-          <div class="col-md-6"><label class="form-label-glass">Nama Kepala Sekolah</label><input type="text" class="form-control form-control-glass" id="cfgKepsek" value="${escapeHtml(cfg.kepsek_nama||'')}" /></div>
-          <div class="col-md-6"><label class="form-label-glass">NIP Kepala Sekolah</label><input type="text" class="form-control form-control-glass" id="cfgNipKepsek" value="${escapeHtml(cfg.nip_kepsek||'')}" /></div>
-          <div class="col-md-3"><label class="form-label-glass">Tahun Ajaran</label><input type="text" class="form-control form-control-glass" id="cfgTA" value="${escapeHtml(cfg.tahun_ajaran||'')}" /></div>
-          <div class="col-md-3"><label class="form-label-glass">Semester</label>
-            <select class="form-control form-control-glass" id="cfgSemester">
-              <option ${cfg.semester==='Ganjil'?'selected':''}>Ganjil</option>
-              <option ${cfg.semester==='Genap'?'selected':''}>Genap</option>
-            </select>
-          </div>
-          <div class="col-md-6"><label class="form-label-glass">URL Logo Sekolah (untuk Avatar & Kop)</label><input type="url" class="form-control form-control-glass" id="cfgLogo" value="${escapeHtml(cfg.logo_url||'')}" placeholder="https://..." /></div>
-        </div>
-        <div class="d-flex justify-content-end mt-3">
-          <button class="btn btn-gold" onclick="saveConfig()">
-            <i class="fas fa-save me-1"></i>Simpan Konfigurasi
-          </button>
-        </div>
-      </div>
-    `;
-  }
-
-  async function saveConfig() {
-    const data = {
-      nama_sekolah: document.getElementById('cfgNama').value,
-      npsn: document.getElementById('cfgNpsn').value,
-      telepon: document.getElementById('cfgTelp').value,
-      alamat: document.getElementById('cfgAlamat').value,
-      email: document.getElementById('cfgEmail').value,
-      website: document.getElementById('cfgWeb').value,
-      kepsek_nama: document.getElementById('cfgKepsek').value,
-      nip_kepsek: document.getElementById('cfgNipKepsek').value,
-      tahun_ajaran: document.getElementById('cfgTA').value,
-      semester: document.getElementById('cfgSemester').value,
-      logo_url: document.getElementById('cfgLogo').value
-    };
-    showLoading('Menyimpan...');
-    const res = await api('saveConfig', data);
-    hideLoading();
-    if (res.success) {
-      showToast('Konfigurasi tersimpan','success');
-      await loadConfig();
-    } else showToast(res.error,'danger');
-  }
-
-  /* ============================================================
-     VIEW: PROFIL
-     ============================================================ */
-  function viewProfile() {
-    const u = STATE.user;
-    const cfg = STATE.config;
-    document.getElementById('viewContainer').innerHTML = `
-      <div class="glass content-card">
-        <div class="d-flex align-items-center gap-3 mb-4">
-          <div class="user-avatar" style="width:70px;height:70px;">
-            ${cfg.logo_url ? `<img src="${cfg.logo_url}" />` : '<i class="fas fa-user fa-lg"></i>'}
-          </div>
-          <div>
-            <h5 class="mb-0">${escapeHtml(u.nama)}</h5>
-            <small style="color:rgba(245,245,247,0.6);">@${escapeHtml(u.username)} &middot; ${u.role==='admin'?'Administrator':'Guru'}</small>
-          </div>
-        </div>
-        <div class="row g-3">
-          <div class="col-md-6"><label class="form-label-glass">NIP</label><input type="text" class="form-control form-control-glass" id="prNip" value="${escapeHtml(u.nip||'')}" /></div>
-          <div class="col-md-6"><label class="form-label-glass">Email</label><input type="email" class="form-control form-control-glass" id="prEmail" value="${escapeHtml(u.email||'')}" /></div>
-          <div class="col-md-6"><label class="form-label-glass">Kelas Wali</label><input type="text" class="form-control form-control-glass" id="prKelasWali" value="${escapeHtml(u.kelas_wali||'')}" /></div>
-          <div class="col-md-6"><label class="form-label-glass">Mapel Ajar</label><input type="text" class="form-control form-control-glass" id="prMapel" value="${escapeHtml(u.mapel_ajar||'')}" /></div>
-        </div>
-        <div class="d-flex justify-content-end mt-3">
-          <button class="btn btn-gold" onclick="saveProfile()">
-            <i class="fas fa-save me-1"></i>Simpan Profil
-          </button>
-        </div>
-        <hr class="my-4" style="border-color:rgba(255,255,255,0.1);" />
-        <h6>Ubah Password</h6>
-        <div class="row g-3">
-          <div class="col-md-4"><label class="form-label-glass">Password Lama</label><input type="password" class="form-control form-control-glass" id="prOldPwd" /></div>
-          <div class="col-md-4"><label class="form-label-glass">Password Baru</label><input type="password" class="form-control form-control-glass" id="prNewPwd" /></div>
-          <div class="col-md-4 d-flex align-items-end">
-            <button class="btn btn-platinum w-100" onclick="changePassword()">
-              <i class="fas fa-key me-1"></i>Ubah
-            </button>
-          </div>
-        </div>
-      </div>
-    `;
-  }
-
-  async function saveProfile() {
-    const data = {
-      id: STATE.user.id,
-      nip: document.getElementById('prNip').value,
-      email: document.getElementById('prEmail').value,
-      kelas_wali: document.getElementById('prKelasWali').value,
-      mapel_ajar: document.getElementById('prMapel').value
-    };
-    showLoading('Menyimpan...');
-    const res = await api('updateUser', data);
-    hideLoading();
-    if (res.success) {
-      showToast('Profil tersimpan','success');
-      Object.assign(STATE.user, data);
-      localStorage.setItem('sag_user', JSON.stringify(STATE.user));
-      document.getElementById('topbarUserName').textContent = STATE.user.nama;
-    } else showToast(res.error,'danger');
-  }
-
-  async function changePassword() {
-    const oldP = document.getElementById('prOldPwd').value;
-    const newP = document.getElementById('prNewPwd').value;
-    if (!oldP || !newP) return showToast('Isi kedua field','warning');
-    showLoading('Mengubah...');
-    const res = await api('changePassword', { id: STATE.user.id, old_password: oldP, new_password: newP });
-    hideLoading();
-    if (res.success) {
-      showToast('Password berhasil diubah','success');
-      document.getElementById('prOldPwd').value = '';
-      document.getElementById('prNewPwd').value = '';
-    } else showToast(res.error,'danger');
-  }
-
-  /* ============================================================
-     MODAL HELPER
-     ============================================================ */
-  let modalInstance = null;
-  function showModal(title, bodyHtml, onSave) {
-    document.getElementById('appModalTitle').textContent = title;
-    document.getElementById('appModalBody').innerHTML = bodyHtml;
-    document.getElementById('appModalFooter').innerHTML = `
-      <button class="btn btn-platinum" data-bs-dismiss="modal">Batal</button>
-      <button class="btn btn-gold" id="modalSaveBtn"><i class="fas fa-save me-1"></i>Simpan</button>
-    `;
-    if (modalInstance) modalInstance.dispose();
-    modalInstance = new bootstrap.Modal(document.getElementById('appModal'));
-    document.getElementById('modalSaveBtn').onclick = onSave;
-    modalInstance.show();
-  }
-  function closeModal() {
-    if (modalInstance) modalInstance.hide();
-  }
-
-  /* ============================================================
-     PRINT PDF (jsPDF + AutoTable + Barcode)
-     ============================================================ */
-  function loadLogoForPDF() {
-    return new Promise(resolve => {
-      const url = STATE.config.logo_url;
-      if (!url) return resolve(null);
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      img.onload = () => resolve(img);
-      img.onerror = () => resolve(null);
-      img.src = url;
-    });
-  }
-
-  async function drawKopSurat(doc, y = 14) {
-    const cfg = STATE.config;
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const logo = await loadLogoForPDF();
-    if (logo) {
-      try { doc.addImage(logo, 'PNG', 14, y, 22, 22); } catch(e){}
-    }
-    doc.setFont('helvetica','bold');
-    doc.setFontSize(13);
-    doc.setTextColor(20,20,30);
-    doc.text(cfg.nama_sekolah || 'SEKOLAH', 40, y + 6);
-    doc.setFont('helvetica','normal');
-    doc.setFontSize(9);
-    doc.text(cfg.alamat || '', 40, y + 11);
-    doc.text(`Telp: ${cfg.telepon || '-'} | Email: ${cfg.email || '-'}`, 40, y + 15);
-    doc.text(`NPSN: ${cfg.npsn || '-'} | Web: ${cfg.website || '-'}`, 40, y + 19);
-    doc.setLineWidth(0.8);
-    doc.setDrawColor(212,175,55);
-    doc.line(14, y + 24, pageWidth - 14, y + 24);
-    return y + 28;
-  }
-
-  function drawBarcode(doc, text, x, y) {
-    try {
-      const canvas = document.getElementById('barcodeCanvas');
-      JsBarcode(canvas, text, { format:'CODE128', width:2, height:40, displayValue:true, fontSize:10 });
-      const dataURL = canvas.toDataURL('image/png');
-      doc.addImage(dataURL, 'PNG', x, y, 80, 22);
-    } catch(e) { console.warn('barcode error',e); }
-  }
-
-  async function drawTTD(doc, y) {
-    const cfg = STATE.config;
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const today = new Date().toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'});
-    doc.setFontSize(10);
-    doc.setFont('helvetica','normal');
-    doc.text(`Diterbitkan di ${cfg.alamat || '...'}, ${today}`, pageWidth - 90, y);
-    doc.text('Mengetahui,', pageWidth - 90, y + 6);
-    doc.text('Kepala Sekolah', pageWidth - 90, y + 12);
-    doc.setFont('helvetica','bold');
-    doc.text(cfg.kepsek_nama || '-', pageWidth - 90, y + 36);
-    doc.setLineWidth(0.3); doc.setDrawColor(120,120,120);
-    doc.line(pageWidth - 90, y + 32, pageWidth - 14, y + 32);
-    doc.setFont('helvetica','normal');
-    doc.setFontSize(8);
-    doc.text(`NIP. ${cfg.nip_kepsek || '-'}`, pageWidth - 90, y + 41);
-    return y + 50;
-  }
-
-  // 1. Cetak Jurnal Agenda PDF
-  async function printAgendaPDF() {
-    showLoading('Menyiapkan PDF...');
-    const filter = STATE.user.role === 'guru' ? { guru: STATE.user.nama } : {};
-    const res = await api('getAgenda', filter);
-    hideLoading();
-    if (!res.success) return showToast(res.error,'danger');
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF('p','mm','a4');
-    let y = await drawKopSurat(doc);
-    doc.setFont('helvetica','bold'); doc.setFontSize(12);
-    doc.text('JURNAL AGENDA MENGAJAR', 105, y, { align:'center' });
-    y += 5;
-    doc.setFont('helvetica','normal'); doc.setFontSize(9);
-    doc.text(`Guru: ${STATE.user.nama}    Tahun: ${STATE.config.tahun_ajaran||''} - ${STATE.config.semester||''}`, 105, y, { align:'center' });
-    y += 4;
-    doc.autoTable({
-      startY: y,
-      head: [['Tanggal','Kelas','Mapel','Jam','Materi','Kegiatan','Catatan']],
-      body: res.data.map(a => [
-        formatDate(a.tanggal), a.kelas, a.mapel, a.jam_ke||'-',
-        a.materi||'-', (a.kegiatan||'-').substring(0,60), (a.catatan||'-').substring(0,40)
-      ]),
-      theme:'grid',
-      headStyles:{ fillColor:[212,175,55], textColor:[20,20,30], fontStyle:'bold' },
-      styles:{ fontSize:8, cellPadding:2 },
-      columnStyles:{ 5:{cellWidth:50}, 6:{cellWidth:35} }
-    });
-    const finalY = doc.lastAutoTable.finalY || y + 20;
-    drawBarcode(doc, 'AGENDA-' + STATE.user.id + '-' + Date.now(), 14, finalY + 5);
-    await drawTTD(doc, finalY + 5);
-    doc.save(`Jurnal_Agenda_${STATE.user.username}_${todayStr()}.pdf`);
-    showToast('PDF berhasil dibuat','success');
-  }
-
-  // 2. Cetak Leger Nilai PDF
-  async function printLegerPDF() {
-    const kelas = document.getElementById('nilaiKelas')?.value;
-    const mapel = document.getElementById('nilaiMapel')?.value;
-    if (!kelas || !mapel) return showToast('Pilih kelas & mapel dulu','warning');
-    showLoading('Menyiapkan Leger...');
-    const res = await api('getLeger', { kelas, mapel });
-    hideLoading();
-    if (!res.success) return showToast(res.error,'danger');
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF('p','mm','a4');
-    let y = await drawKopSurat(doc);
-    doc.setFont('helvetica','bold'); doc.setFontSize(12);
-    doc.text('LEGER NILAI SISWA', 105, y, { align:'center' });
-    y += 5;
-    doc.setFont('helvetica','normal'); doc.setFontSize(9);
-    doc.text(`Kelas: ${kelas}    Mapel: ${mapel}    Semester: ${STATE.config.semester||''}`, 105, y, { align:'center' });
-    y += 4;
-    const jenis = res.jenis || [];
-    doc.autoTable({
-      startY: y,
-      head: [['No','NIS','Nama', ...jenis, 'Rata-rata']],
-      body: res.data.map((l,i) => [i+1, l.nis, l.nama_siswa, ...jenis.map(j => l[j]||0), l.rata_rata||0]),
-      theme:'grid',
-      headStyles:{ fillColor:[212,175,55], textColor:[20,20,30], fontStyle:'bold' },
-      styles:{ fontSize:8, cellPadding:2 }
-    });
-    const finalY = doc.lastAutoTable.finalY || y + 20;
-    drawBarcode(doc, 'LEGER-' + kelas + '-' + mapel + '-' + Date.now(), 14, finalY + 5);
-    await drawTTD(doc, finalY + 5);
-    doc.save(`Leger_${kelas}_${mapel}_${todayStr()}.pdf`);
-    showToast('Leger PDF dibuat','success');
-  }
-
-  // 3. Cetak Absensi PDF
-  async function printAbsensiPDF() {
-    const kelas = document.getElementById('absKelas')?.value;
-    const mapel = document.getElementById('absMapel')?.value;
-    const tanggal = document.getElementById('absTanggal')?.value;
-    if (!kelas) return showToast('Pilih kelas dulu','warning');
-    showLoading('Menyiapkan PDF...');
-    const res = await api('getAbsensi', { kelas, mapel, tanggal });
-    hideLoading();
-    if (!res.success) return showToast(res.error,'danger');
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF('p','mm','a4');
-    let y = await drawKopSurat(doc);
-    doc.setFont('helvetica','bold'); doc.setFontSize(12);
-    doc.text('REKAP ABSENSI SISWA', 105, y, { align:'center' });
-    y += 5;
-    doc.setFont('helvetica','normal'); doc.setFontSize(9);
-    doc.text(`Kelas: ${kelas}    Tanggal: ${formatDate(tanggal)}    Mapel: ${mapel||'-'}`, 105, y, { align:'center' });
-    y += 4;
-    doc.autoTable({
-      startY: y,
-      head: [['No','NIS','Nama','Status','Keterangan']],
-      body: res.data.map((a,i) => [i+1, a.nis, a.nama_siswa, a.status, a.keterangan||'-']),
-      theme:'grid',
-      headStyles:{ fillColor:[212,175,55], textColor:[20,20,30], fontStyle:'bold' },
-      styles:{ fontSize:8, cellPadding:2 }
-    });
-    const finalY = doc.lastAutoTable.finalY || y + 20;
-    drawBarcode(doc, 'ABSENSI-' + kelas + '-' + tanggal, 14, finalY + 5);
-    await drawTTD(doc, finalY + 5);
-    doc.save(`Absensi_${kelas}_${tanggal}.pdf`);
-    showToast('PDF dibuat','success');
-  }
-
-  // 4. Cetak Lembar Kontrol Kelengkapan Administrasi Guru
-  async function printLembarKontrol() {
-    showLoading('Menyiapkan Lembar Kontrol...');
-    const res = await api('getDashboard');
-    hideLoading();
-    if (!res.success) return showToast(res.error,'danger');
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF('l','mm','a4'); // landscape
-    let y = await drawKopSurat(doc);
-    doc.setFont('helvetica','bold'); doc.setFontSize(13);
-    doc.text('LEMBAR KONTROL KELENGKAPAN ADMINISTRASI MENGAJAR GURU', 148, y, { align:'center' });
-    y += 5;
-    doc.setFont('helvetica','normal'); doc.setFontSize(9);
-    doc.text(`Tahun ${STATE.config.tahun_ajaran||''} - Semester ${STATE.config.semester||''}`, 148, y, { align:'center' });
-    y += 4;
-    const head = [['No','Nama Guru','Mapel','Kelas', ...JENIS_PERANGKAT, 'Persen']];
-    const body = res.data.kelengkapan.map((k,i) => {
-      // re-kompute per jenis
-      const row = [i+1, k.guru_nama, k.mapel||'-', k.kelas||'-'];
-      // kita tampilkan tanda ✓ / - per jenis (butuh data per jenis - skip detail, pakai summary)
-      JENIS_PERANGKAT.forEach(() => row.push(k.approved > 0 ? 'OK' : '-'));
-      row.push(k.persen + '%');
-      return row;
-    });
-    doc.autoTable({
-      startY: y,
-      head: head,
-      body: body,
-      theme:'grid',
-      headStyles:{ fillColor:[212,175,55], textColor:[20,20,30], fontStyle:'bold' },
-      styles:{ fontSize:8, cellPadding:2, halign:'center' },
-      columnStyles:{ 1:{halign:'left'}, 2:{halign:'left'} }
-    });
-    const finalY = doc.lastAutoTable.finalY || y + 20;
-    drawBarcode(doc, 'KONTROL-ADM-' + todayStr(), 14, finalY + 5);
-    await drawTTD(doc, finalY + 5);
-    doc.save(`Lembar_Kontrol_Administrasi_${todayStr()}.pdf`);
-    showToast('Lembar Kontrol dibuat','success');
-  }
-
-  // 5. Cetak Rekap Wali
-  async function printRekapWali() {
-    if (!STATE.cache.lastRekapWali) return showToast('Data belum dimuat','warning');
-    showLoading('Menyiapkan PDF...');
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF('p','mm','a4');
-    let y = await drawKopSurat(doc);
-    doc.setFont('helvetica','bold'); doc.setFontSize(12);
-    doc.text('REKAP GURU WALI KELAS', 105, y, { align:'center' });
-    y += 8;
-    doc.autoTable({
-      startY: y,
-      head: [['No','Nama Guru','NIP','Mapel','Rombel','Jumlah Siswa']],
-      body: STATE.cache.lastRekapWali.map((r,i) => [i+1, r.nama_guru, r.nip||'-', r.mapel||'-', r.rombel||'-', r.jml_siswa]),
-      theme:'grid',
-      headStyles:{ fillColor:[212,175,55], textColor:[20,20,30], fontStyle:'bold' },
-      styles:{ fontSize:9, cellPadding:3 }
-    });
-    const finalY = doc.lastAutoTable.finalY || y + 20;
-    drawBarcode(doc, 'REKAP-WALI-' + todayStr(), 14, finalY + 5);
-    await drawTTD(doc, finalY + 5);
-    doc.save(`Rekap_Wali_${todayStr()}.pdf`);
-    hideLoading();
-    showToast('PDF dibuat','success');
-  }
-
-  /* ============================================================
-     INIT: cek token tersimpan
-     ============================================================ */
-  (function init() {
-    const savedToken = localStorage.getItem('sag_token');
-    const savedUser  = localStorage.getItem('sag_user');
-    if (savedToken && savedUser) {
-      STATE.token = savedToken;
-      STATE.user  = JSON.parse(savedUser);
-      loadConfig().then(() => {
-        enterApp();
-      });
-    }
-  })();
-  </script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
