@@ -1,0 +1,27 @@
+{
+  "name": "Sistem Administrasi Guru",
+  "short_name": "SAG",
+  "description": "Aplikasi administrasi guru: absensi, penilaian, jurnal agenda, jadwal, perangkat ajar, dan bimbingan wali.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f4f6f9",
+  "theme_color": "#3a5aff",
+  "icons": [
+    {
+      "src": "https://iili.io/C13PuVa.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://iili.io/C13PuVa.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["education", "productivity"],
+  "lang": "id",
+  "dir": "ltr"
+}
