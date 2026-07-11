@@ -123,9 +123,9 @@ body{
 .kal-slot.readonly:hover{transform:none;box-shadow:0 2px 6px rgba(0,0,0,.12);}
 .kal-empty-hint{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:.6rem;color:var(--muted);opacity:0;transition:opacity .15s;}
 .kal-cell:hover .kal-empty-hint{opacity:.6;}
-.kal-legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px;font-size:.72rem;}
-.kal-legend span{display:inline-flex;align-items:center;gap:4px;}
-.kal-legend i{width:12px;height:12px;border-radius:3px;display:inline-block;}
+.kal-legend{display:flex;flex-wrap:wrap;gap:10px 14px;margin-top:10px;font-size:.72rem;align-items:center;}
+.kal-legend span{display:inline-flex;align-items:center;gap:5px;}
+.kal-legend i{width:11px;height:11px;border-radius:3px;display:inline-block;flex-shrink:0;}
 @media (max-width:575.98px){.kal-grid{min-width:680px;}.kal-cell{min-height:38px;}}
 .chip-toggle{cursor:pointer;}
 .mapel-pill{display:inline-block;padding:3px 9px;border-radius:14px;font-size:.7rem;font-weight:600;margin:2px;background:rgba(58,90,255,.12);color:var(--accent);}
@@ -149,7 +149,11 @@ body{
       <label class="form-label small fw-semibold">Username</label>
       <input type="text" class="form-control mb-3" id="loginUsername" required autocomplete="username">
       <label class="form-label small fw-semibold">Password</label>
-      <input type="password" class="form-control mb-3" id="loginPassword" required autocomplete="current-password">
+      <input type="password" class="form-control mb-1" id="loginPassword" required autocomplete="current-password">
+      <div class="form-check mb-3">
+        <input class="form-check-input" type="checkbox" id="showPwLogin" onchange="togglePwVisibility('loginPassword', this.checked)">
+        <label class="form-check-label small" for="showPwLogin"><i class="fa-solid fa-eye me-1"></i>Tampilkan password</label>
+      </div>
       <button type="submit" class="btn btn-accent w-100 mt-2"><i class="fa-solid fa-right-to-bracket me-1"></i> Masuk</button>
       <div class="text-danger small mt-2" id="loginError"></div>
     </form>
@@ -335,6 +339,11 @@ async function apiCall(action, payload = {}, silent = false) {
 function showSpinner(show) {
   document.getElementById('spinnerOverlay').style.display = show ? 'flex' : 'none';
 }
+
+function togglePwVisibility(inputId, show) {
+  const inp = document.getElementById(inputId);
+  if (inp) inp.type = show ? 'text' : 'password';
+}
 function showToast(msg, type = 'primary') {
   const id = 't' + Date.now();
   const html = `<div id="${id}" class="toast align-items-center text-bg-${type} border-0" role="alert">
@@ -430,8 +439,8 @@ const MENU_GURU = [
   { section: 'Menu Guru' },
   { id: 'absensi', label: 'Input Absensi', icon: 'fa-clipboard-check' },
   { id: 'nilai', label: 'Input Penilaian', icon: 'fa-marker' },
-  { id: 'jadwal', label: 'Jadwal Mengajar', icon: 'fa-calendar-days' },
   { id: 'agenda', label: 'Jurnal Agenda', icon: 'fa-book-open' },
+  { id: 'jadwal', label: 'Jadwal Mengajar', icon: 'fa-calendar-days' },
   { id: 'perangkat', label: 'E-Perangkat Ajar', icon: 'fa-file-arrow-up' },
   { id: 'panduan', label: 'Panduan Mengajar', icon: 'fa-book' },
 ];
@@ -511,7 +520,7 @@ async function navigate(page) {
     absensi: renderAbsensi,
     nilai: renderNilai,
     jadwal: () => renderKalenderJadwal(false),
-    agenda: renderGenericTable.bind(null, 'Agenda', agendaColumns()),
+    agenda: renderAgenda,
     bimbingan: renderGenericTable.bind(null, 'BimbinganWali', bimbinganColumns()),
     perangkat: renderPerangkat,
     panduan: renderPanduan,
@@ -756,17 +765,30 @@ async function deleteRow(table, id) {
 /*************************************************************
  * ABSENSI
  *************************************************************/
+function getUserMapelOptions() {
+  const mapelList = getData('Mapel');
+  const userMapelIds = STATE.user.mapelIds
+    ? (Array.isArray(STATE.user.mapelIds) ? STATE.user.mapelIds : String(STATE.user.mapelIds).split(',').map(s=>s.trim()).filter(Boolean))
+    : [];
+  const filtered = userMapelIds.length ? mapelList.filter(m => userMapelIds.includes(m.id)) : mapelList;
+  return filtered.map(m => `<option value="${m.id}">${m.namaMapel}${m.kodeMapel?' ('+m.kodeMapel+')':''}</option>`).join('');
+}
+
 async function renderAbsensi() {
   const kelasOptions = getData('Kelas').map(k => `<option value="${k.id}">${k.namaKelas}</option>`).join('');
+  const mapelOptions = getUserMapelOptions();
 
   document.getElementById('pageContent').innerHTML = `
     <div class="glass card-section">
+      <div class="section-title mb-2"><i class="fa-solid fa-clipboard-check me-1"></i> Data Absensi</div>
       <div class="row g-2 mb-3">
-        <div class="col-md-4"><label class="form-label small fw-semibold">Tanggal</label>
+        <div class="col-md-3"><label class="form-label small fw-semibold">Tanggal</label>
           <input type="date" class="form-control form-control-sm" id="absTanggal" value="${new Date().toISOString().slice(0,10)}"></div>
-        <div class="col-md-4"><label class="form-label small fw-semibold">Kelas</label>
+        <div class="col-md-3"><label class="form-label small fw-semibold">Kelas</label>
           <select class="form-select form-select-sm" id="absKelas" onchange="loadSiswaAbsensi()"><option value="">Pilih Kelas</option>${kelasOptions}</select></div>
-        <div class="col-md-4"><label class="form-label small fw-semibold">Jam Ke</label>
+        <div class="col-md-3"><label class="form-label small fw-semibold">Mapel</label>
+          <select class="form-select form-select-sm" id="absMapel">${mapelOptions}</select></div>
+        <div class="col-md-3"><label class="form-label small fw-semibold">Jam Ke</label>
           <input type="text" class="form-control form-control-sm" id="absJamKe" placeholder="1-2"></div>
       </div>
       <div id="absensiList" class="section-sub">Pilih kelas untuk menampilkan daftar siswa.</div>
@@ -794,13 +816,15 @@ function loadSiswaAbsensi() {
 
 async function simpanAbsensi() {
   const kelasId = document.getElementById('absKelas').value;
+  const mapelId = document.getElementById('absMapel').value;
   const tanggal = document.getElementById('absTanggal').value;
   const jamKe = document.getElementById('absJamKe').value;
+  if (!kelasId) { showToast('Pilih kelas terlebih dahulu.', 'warning'); return; }
   const siswaKelas = window._allSiswa.filter(s => s.kelasId === kelasId);
 
   const rows = siswaKelas.map(s => ({
     id: 'ABS-' + Date.now() + '-' + s.id,
-    tanggal, kelasId, guruId: STATE.user.id, siswaId: s.id, jamKe,
+    tanggal, kelasId, mapelId, guruId: STATE.user.id, siswaId: s.id, jamKe,
     status: document.getElementById('stat_' + s.id).value
   }));
   rows.forEach(r => dbUpsert('Absensi', r)); // simpan lokal dulu, instan
@@ -818,21 +842,32 @@ async function simpanAbsensi() {
  *************************************************************/
 async function renderNilai() {
   const kelasOptions = getData('Kelas').map(k => `<option value="${k.id}">${k.namaKelas}</option>`).join('');
+  const mapelOptions = getUserMapelOptions();
 
   document.getElementById('pageContent').innerHTML = `
     <div class="glass card-section mb-3">
-      <div class="row g-2">
+      <div class="section-title mb-2"><i class="fa-solid fa-marker me-1"></i> Data Penilaian</div>
+      <div class="row g-2 mb-2">
+        <div class="col-md-3"><label class="form-label small fw-semibold">Tanggal</label>
+          <input type="date" class="form-control form-control-sm" id="nlTanggal" value="${new Date().toISOString().slice(0,10)}"></div>
         <div class="col-md-3"><label class="form-label small fw-semibold">Kelas</label>
           <select class="form-select form-select-sm" id="nlKelas">${kelasOptions}</select></div>
+        <div class="col-md-3"><label class="form-label small fw-semibold">Mapel</label>
+          <select class="form-select form-select-sm" id="nlMapel">${mapelOptions}</select></div>
+        <div class="col-md-3"><label class="form-label small fw-semibold">Jam Ke</label>
+          <input type="text" class="form-control form-control-sm" id="nlJamKe" placeholder="1-2"></div>
+      </div>
+      <div class="row g-2">
         <div class="col-md-3"><label class="form-label small fw-semibold">Jenis Nilai</label>
           <select class="form-select form-select-sm" id="nlJenis">
             <option>Tugas</option><option>UH</option><option>PTS</option><option>PAS</option><option>Praktik</option>
           </select></div>
         <div class="col-md-3"><label class="form-label small fw-semibold">Nama Penilaian</label>
           <input class="form-control form-control-sm" id="nlNama" placeholder="Contoh: Tugas 1"></div>
-        <div class="col-md-3"><label class="form-label small fw-semibold">Semester / Tapel</label>
-          <div class="d-flex gap-1"><input class="form-control form-control-sm" id="nlSemester" placeholder="Ganjil" value="${STATE.config.semesterAktif||''}">
-          <input class="form-control form-control-sm" id="nlTapel" placeholder="2026/2027" value="${STATE.config.tapelAktif||''}"></div></div>
+        <div class="col-md-3"><label class="form-label small fw-semibold">Semester</label>
+          <input class="form-control form-control-sm" id="nlSemester" placeholder="Ganjil" value="${STATE.config.semesterAktif||''}"></div>
+        <div class="col-md-3"><label class="form-label small fw-semibold">Tahun Ajaran</label>
+          <input class="form-control form-control-sm" id="nlTapel" placeholder="2026/2027" value="${STATE.config.tapelAktif||''}"></div>
       </div>
       <button class="btn btn-accent btn-sm mt-3" onclick="loadLeger()"><i class="fa-solid fa-magnifying-glass me-1"></i>Tampilkan Leger</button>
       <button class="btn btn-soft btn-sm mt-3" onclick="printLeger()"><i class="fa-solid fa-print me-1"></i>Cetak PDF</button>
@@ -842,12 +877,14 @@ async function renderNilai() {
 
 async function loadLeger() {
   const kelasId = document.getElementById('nlKelas').value;
+  const mapelId = document.getElementById('nlMapel').value;
   const semester = document.getElementById('nlSemester').value;
   const tapel = document.getElementById('nlTapel').value;
-  const mapelId = STATE.user.id; // asumsi 1 guru dapat difilter per mapel; sederhanakan pakai guruId sbg mapel scope
+  if (!kelasId || !mapelId) { showToast('Pilih kelas dan mapel terlebih dahulu.', 'warning'); return; }
 
   const res = await apiCall('getLeger', { kelasId, mapelId, semester, tapel });
   window._legerSiswa = getData('DataSiswa', s => s.kelasId === kelasId);
+  window._legerMeta = { kelasId, mapelId, semester, tapel };
 
   if (!res.success) return;
   window._legerData = res.data;
@@ -879,15 +916,19 @@ async function loadLeger() {
 
 async function simpanNilaiCepat() {
   const kelasId = document.getElementById('nlKelas').value;
+  const mapelId = document.getElementById('nlMapel').value;
+  const tanggal = document.getElementById('nlTanggal').value;
+  const jamKe = document.getElementById('nlJamKe').value;
   const jenis = document.getElementById('nlJenis').value;
   const namaPenilaian = document.getElementById('nlNama').value;
   const semester = document.getElementById('nlSemester').value;
   const tapel = document.getElementById('nlTapel').value;
   const siswaId = document.getElementById('nlSiswa').value;
   const nilai = document.getElementById('nlNilaiInput').value;
+  if (!nilai) { showToast('Masukkan nilai terlebih dahulu.', 'warning'); return; }
 
   const res = await apiCall('create', { table: 'Nilai', data: {
-    tanggal: new Date().toISOString().slice(0,10), kelasId, mapelId: STATE.user.id, guruId: STATE.user.id,
+    tanggal, kelasId, mapelId, guruId: STATE.user.id, jamKe,
     siswaId, jenis, namaPenilaian, nilai, semester, tapel
   }});
   if (res.success) { showToast('Nilai tersimpan.', 'success'); loadLeger(); }
@@ -905,6 +946,121 @@ function printLeger() {
     addTandaTanganDanBarcode(doc, 'LGR-' + Date.now());
     doc.save('Leger_Nilai.pdf');
   });
+}
+
+/*************************************************************
+ * JURNAL AGENDA (custom form: Tanggal, Kelas, Mapel, Jam Ke + Materi, Kegiatan)
+ *************************************************************/
+async function renderAgenda() {
+  const kelasOptions = getData('Kelas').map(k => `<option value="${k.id}">${k.namaKelas}</option>`).join('');
+  const mapelOptions = getUserMapelOptions();
+  const today = new Date().toISOString().slice(0,10);
+
+  // Riwayat agenda terbaru milik guru
+  const agendaRows = getData('Agenda', a => a.guruId === STATE.user.id)
+    .slice().sort((a,b) => (a.tanggal < b.tanggal ? 1 : -1)).slice(0, 15);
+  const riwayatHtml = agendaRows.map(a => {
+    const keg = (a.kegiatan || '');
+    const kegShort = keg.length > 80 ? keg.substring(0,80) + '...' : keg;
+    return `<tr>
+      <td>${a.tanggal || '-'}</td>
+      <td>${getKelasNama(a.kelasId)}</td>
+      <td>${getMapelNama(a.mapelId)}</td>
+      <td>${a.jamKe || '-'}</td>
+      <td>${a.materi || '-'}</td>
+      <td>${kegShort || '-'}</td>
+      <td class="text-end">
+        <button class="btn btn-sm btn-soft" onclick='openFormAgenda(${JSON.stringify(a).replace(/'/g,"&#39;")})'><i class="fa-solid fa-pen"></i></button>
+        <button class="btn btn-sm btn-soft text-danger" onclick="deleteRow('Agenda','${a.id}')"><i class="fa-solid fa-trash"></i></button>
+      </td></tr>`;
+  }).join('') || `<tr><td colspan="7" class="text-center section-sub py-4">Belum ada jurnal agenda.</td></tr>`;
+
+  document.getElementById('pageContent').innerHTML = `
+    <div class="glass card-section mb-3">
+      <div class="section-title mb-2"><i class="fa-solid fa-pen-to-square me-1"></i> Catat Jurnal Agenda</div>
+      <div class="row g-2 mb-2">
+        <div class="col-md-3"><label class="form-label small fw-semibold">Tanggal</label>
+          <input type="date" class="form-control form-control-sm" id="agTanggal" value="${today}"></div>
+        <div class="col-md-3"><label class="form-label small fw-semibold">Kelas</label>
+          <select class="form-select form-select-sm" id="agKelas">${kelasOptions}</select></div>
+        <div class="col-md-3"><label class="form-label small fw-semibold">Mapel</label>
+          <select class="form-select form-select-sm" id="agMapel">${mapelOptions}</select></div>
+        <div class="col-md-3"><label class="form-label small fw-semibold">Jam Ke</label>
+          <input type="text" class="form-control form-control-sm" id="agJamKe" placeholder="1-2"></div>
+      </div>
+      <label class="form-label small fw-semibold">Materi</label>
+      <input class="form-control form-control-sm mb-2" id="agMateri" placeholder="Materi pelajaran hari ini">
+      <label class="form-label small fw-semibold">Kegiatan Pembelajaran</label>
+      <textarea class="form-control form-control-sm mb-2" id="agKegiatan" rows="3" placeholder="Deskripsikan kegiatan pembelajaran..."></textarea>
+      <button class="btn btn-accent btn-sm" onclick="simpanAgenda(null)"><i class="fa-solid fa-save me-1"></i>Simpan Jurnal</button>
+    </div>
+    <div class="glass card-section">
+      <div class="section-title mb-3">Jurnal Agenda Terbaru</div>
+      <div class="table-responsive"><table class="table table-sm">
+        <thead><tr><th>Tanggal</th><th>Kelas</th><th>Mapel</th><th>Jam</th><th>Materi</th><th>Kegiatan</th><th></th></tr></thead>
+        <tbody>${riwayatHtml}</tbody>
+      </table></div>
+    </div>`;
+}
+
+function openFormAgenda(existing) {
+  const isEdit = !!existing;
+  const kelasOptions = getData('Kelas').map(k => `<option value="${k.id}" ${isEdit && existing.kelasId===k.id?'selected':''}>${k.namaKelas}</option>`).join('');
+  const mapelOptions = getUserMapelOptions();
+  const modalHtml = `<div class="modal fade" id="agendaModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content glass">
+    <div class="modal-header"><h6 class="modal-title">${isEdit ? 'Edit' : 'Tambah'} Jurnal Agenda</h6><button class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+      <div class="row g-2 mb-2">
+        <div class="col-md-3"><label class="form-label small fw-semibold">Tanggal</label>
+          <input type="date" class="form-control form-control-sm" id="agTanggal" value="${isEdit ? (existing.tanggal||'') : ''}"></div>
+        <div class="col-md-3"><label class="form-label small fw-semibold">Kelas</label>
+          <select class="form-select form-select-sm" id="agKelas">${kelasOptions}</select></div>
+        <div class="col-md-3"><label class="form-label small fw-semibold">Mapel</label>
+          <select class="form-select form-select-sm" id="agMapel">${mapelOptions}</select></div>
+        <div class="col-md-3"><label class="form-label small fw-semibold">Jam Ke</label>
+          <input type="text" class="form-control form-control-sm" id="agJamKe" value="${isEdit ? (existing.jamKe||'') : ''}" placeholder="1-2"></div>
+      </div>
+      <label class="form-label small fw-semibold">Materi</label>
+      <input class="form-control form-control-sm mb-2" id="agMateri" value="${isEdit ? (existing.materi||'').replace(/"/g,'&quot;') : ''}" placeholder="Materi pelajaran">
+      <label class="form-label small fw-semibold">Kegiatan Pembelajaran</label>
+      <textarea class="form-control form-control-sm" id="agKegiatan" rows="3" placeholder="Deskripsikan kegiatan...">${isEdit ? (existing.kegiatan||'') : ''}</textarea>
+    </div>
+    <div class="modal-footer">
+      ${isEdit ? `<button class="btn btn-soft btn-sm text-danger me-auto" onclick="deleteRow('Agenda','${existing.id}');bootstrap.Modal.getInstance(document.getElementById('agendaModal')).hide();"><i class="fa-solid fa-trash me-1"></i>Hapus</button>` : ''}
+      <button class="btn btn-accent btn-sm" onclick='simpanAgenda(${isEdit ? `"${existing.id}"` : 'null'})'>Simpan</button>
+    </div>
+  </div></div></div>`;
+  document.getElementById('agendaModalHolder')?.remove();
+  const holder = document.createElement('div'); holder.id = 'agendaModalHolder'; holder.innerHTML = modalHtml;
+  document.body.appendChild(holder);
+  if (isEdit) {
+    document.getElementById('agKelas').value = existing.kelasId || '';
+    document.getElementById('agMapel').value = existing.mapelId || '';
+  }
+  new bootstrap.Modal(document.getElementById('agendaModal')).show();
+}
+
+async function simpanAgenda(id) {
+  const data = {
+    tanggal: document.getElementById('agTanggal').value,
+    kelasId: document.getElementById('agKelas').value,
+    mapelId: document.getElementById('agMapel').value,
+    jamKe: document.getElementById('agJamKe').value,
+    materi: document.getElementById('agMateri').value,
+    kegiatan: document.getElementById('agKegiatan').value,
+    guruId: STATE.user.id
+  };
+  if (!data.tanggal || !data.kelasId || !data.mapelId) {
+    showToast('Lengkapi tanggal, kelas, dan mapel.', 'warning');
+    return;
+  }
+  if (id) data.id = id;
+  // Tutup modal jika terbuka
+  const modalEl = document.getElementById('agendaModal');
+  if (modalEl) bootstrap.Modal.getInstance(modalEl)?.hide();
+  await writeData(id ? 'update' : 'create', 'Agenda', data, id);
+  showToast('Jurnal agenda tersimpan.', 'success');
+  renderAgenda();
 }
 
 /*************************************************************
@@ -1312,7 +1468,11 @@ async function renderProfil() {
       <label class="form-label small fw-semibold">Password Baru <span class="section-sub">(kosongkan jika tidak diubah)</span></label>
       <input type="password" class="form-control form-control-sm mb-2" id="profilPasswordBaru">
       <label class="form-label small fw-semibold">Konfirmasi Password Baru</label>
-      <input type="password" class="form-control form-control-sm mb-3" id="profilPasswordKonfirmasi">
+      <input type="password" class="form-control form-control-sm mb-1" id="profilPasswordKonfirmasi">
+      <div class="form-check mb-3">
+        <input class="form-check-input" type="checkbox" id="showPwProfil" onchange="togglePwVisibility('profilPasswordBaru', this.checked); togglePwVisibility('profilPasswordKonfirmasi', this.checked)">
+        <label class="form-check-label small" for="showPwProfil"><i class="fa-solid fa-eye me-1"></i>Tampilkan password</label>
+      </div>
       <button class="btn btn-accent btn-sm" onclick="simpanProfil()"><i class="fa-solid fa-save me-1"></i>Simpan Perubahan</button>
     </div>`;
 }
@@ -1633,14 +1793,7 @@ async function renderKalenderJadwal(isAdmin) {
     ${filterHtml}
     <div class="glass card-section">
       <div id="kalGridHolder">Memuat kalender...</div>
-      <div class="kal-legend">
-        <span><i style="background:#3a5aff;"></i>Senin</span>
-        <span><i style="background:#12b76a;"></span>Selasa</span>
-        <span><i style="background:#f79009;"></span>Rabu</span>
-        <span><i style="background:#7b3aff;"></span>Kamis</span>
-        <span><i style="background:#f04438;"></span>Jumat</span>
-        <span><i style="background:#0891b2;"></span>Sabtu</span>
-      </div>
+      <div id="kalLegendHolder" class="mt-2"></div>
     </div>`;
 
   window._kalState = { isAdmin, jadwalRows, kelasList, mapelList, guruList };
@@ -1739,6 +1892,19 @@ function renderKalenderGrid(isAdmin) {
   html = summary + html;
 
   document.getElementById('kalGridHolder').innerHTML = html;
+
+  // Build dynamic legend: warna blok = warna mapel
+  const uniqueMapelIds = [...new Set(rows.map(r => r.mapelId).filter(Boolean))];
+  const legendHtml = uniqueMapelIds.length
+    ? `<div class="kal-legend"><span class="section-sub small me-1 fw-semibold">Warna mapel:</span>` +
+      uniqueMapelIds.map(mid => {
+        const nama = getMapelNama(mid);
+        const color = getMapelColor(mid);
+        return `<span><i style="background:${color};"></i>${nama}</span>`;
+      }).join('') + `</div>`
+    : `<div class="section-sub small"><i class="fa-solid fa-circle-info me-1"></i>Belum ada jadwal. ${isAdmin ? 'Klik slot kosong pada kalender untuk menambah jadwal.' : ''}</div>`;
+  const legendHolder = document.getElementById('kalLegendHolder');
+  if (legendHolder) legendHolder.innerHTML = legendHtml;
 }
 
 function openFormJadwalAt(dayIdx, min, isAdmin) {
