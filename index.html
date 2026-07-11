@@ -364,9 +364,11 @@ if ('serviceWorker' in navigator) {
 /*************************************************************
  * SIDEBAR / MENU
  *************************************************************/
+const MENU_COMMON_TOP = [
+  { id: 'dashboard', label: 'Dashboard', icon: 'fa-gauge-high' },
+];
 const MENU_GURU = [
   { section: 'Menu Guru' },
-  { id: 'dashboard', label: 'Dashboard', icon: 'fa-gauge-high' },
   { id: 'absensi', label: 'Input Absensi', icon: 'fa-clipboard-check' },
   { id: 'nilai', label: 'Input Penilaian', icon: 'fa-marker' },
   { id: 'jadwal', label: 'Jadwal Mengajar', icon: 'fa-calendar-days' },
@@ -378,16 +380,22 @@ const MENU_GURU = [
 const MENU_ADMIN = [
   { section: 'Menu Admin' },
   { id: 'rekapWali', label: 'Rekap Guru Wali', icon: 'fa-people-roof' },
+  { id: 'manajemenSiswa', label: 'Manajemen Data Siswa', icon: 'fa-user-graduate' },
+  { id: 'manajemenGuru', label: 'Manajemen Data Guru', icon: 'fa-chalkboard-user' },
   { id: 'userManagement', label: 'Manajemen User', icon: 'fa-users-gear' },
   { id: 'importSiswa', label: 'Import Siswa Massal', icon: 'fa-file-import' },
   { id: 'konfigurasi', label: 'Konfigurasi Sekolah', icon: 'fa-gear' },
   { id: 'monitoringPerangkat', label: 'Validasi & Monitoring', icon: 'fa-clipboard-list' },
 ];
+const MENU_COMMON_BOTTOM = [
+  { section: 'Akun' },
+  { id: 'profil', label: 'Profil Saya', icon: 'fa-id-badge' },
+];
 
 function renderMenu() {
   const isAdmin = STATE.user.role === 'Admin';
-  let items = MENU_GURU.slice();
-  if (isAdmin) items = items.concat(MENU_ADMIN);
+  // Admin hanya melihat Menu Admin (tanpa Menu Guru), Guru hanya melihat Menu Guru
+  const items = MENU_COMMON_TOP.concat(isAdmin ? MENU_ADMIN : MENU_GURU, MENU_COMMON_BOTTOM);
 
   let html = '';
   items.forEach(item => {
@@ -417,6 +425,9 @@ const PAGE_TITLES = {
   importSiswa: ['Import Siswa Massal', 'Import data siswa via CSV'],
   konfigurasi: ['Konfigurasi Sekolah', 'Identitas & pengaturan sekolah'],
   monitoringPerangkat: ['Validasi & Monitoring', 'Supervisi kelengkapan administrasi guru'],
+  manajemenSiswa: ['Manajemen Data Siswa', 'Kelola data induk siswa'],
+  manajemenGuru: ['Manajemen Data Guru', 'Kelola data induk guru'],
+  profil: ['Profil Saya', 'Ubah foto profil, data diri, dan password'],
 };
 
 async function navigate(page) {
@@ -440,6 +451,9 @@ async function navigate(page) {
     importSiswa: renderImportSiswa,
     konfigurasi: renderKonfigurasi,
     monitoringPerangkat: renderMonitoringPerangkat,
+    manajemenSiswa: renderManajemenSiswa,
+    manajemenGuru: renderManajemenGuru,
+    profil: renderProfil,
   };
   document.getElementById('pageContent').innerHTML = '<div class="text-center py-5 section-sub">Memuat...</div>';
   if (renderers[page]) await renderers[page]();
@@ -449,6 +463,11 @@ async function navigate(page) {
  * DASHBOARD
  *************************************************************/
 async function renderDashboard() {
+  if (STATE.user.role === 'Guru') return renderDashboardGuru();
+  return renderDashboardAdmin();
+}
+
+async function renderDashboardAdmin() {
   const kelas = getData('Kelas');
   const users = getData('Users');
   const siswa = getData('DataSiswa');
@@ -485,6 +504,40 @@ async function renderDashboard() {
     <div class="glass card-section">
       <div class="section-title mb-3"><i class="fa-solid fa-chart-simple me-1"></i> Kelengkapan Perangkat Ajar per Guru</div>
       ${barsHtml}
+    </div>`;
+}
+
+// Dashboard guru: hanya menampilkan rekapan milik guru yang sedang login
+async function renderDashboardGuru() {
+  const perangkat = getData('PerangkatAjar', p => p.guruId === STATE.user.id);
+  const jadwal = getData('JadwalMengajar', j => j.guruId === STATE.user.id);
+  const bimbingan = getData('BimbinganWali', b => b.guruId === STATE.user.id);
+  const agenda = getData('Agenda', a => a.guruId === STATE.user.id);
+
+  const jenisWajib = ['Silabus', 'ATP', 'Prota', 'Promes', 'Modul Ajar/RPP', 'KKTP'];
+  const jenisTerisi = jenisWajib.filter(j => perangkat.some(p => p.jenis === j && p.status !== 'Ditolak'));
+  const persentase = Math.round((jenisTerisi.length / jenisWajib.length) * 100);
+  const kelasDiampu = [...new Set(jadwal.map(j => j.kelasId))];
+
+  const agendaRows = agenda.slice().sort((a,b) => (a.tanggal < b.tanggal ? 1 : -1)).slice(0, 5)
+    .map(a => `<div class="mb-2 small border-bottom pb-2"><span class="fw-semibold">${a.tanggal || '-'}</span> · ${a.kelasId || '-'} — ${a.materi || 'Tanpa materi'}</div>`).join('')
+    || '<p class="section-sub small mb-0">Belum ada agenda tercatat.</p>';
+
+  document.getElementById('pageContent').innerHTML = `
+    <div class="row g-3 mb-3">
+      ${statCard('Kelas Diampu', kelasDiampu.length, 'fa-chalkboard', 'linear-gradient(135deg,#3a5aff,#7b3aff)')}
+      ${statCard('Jadwal Mengajar', jadwal.length, 'fa-calendar-days', 'linear-gradient(135deg,#12b76a,#0891b2)')}
+      ${statCard('Bimbingan Wali', bimbingan.length, 'fa-hands-holding-child', 'linear-gradient(135deg,#f79009,#f04438)')}
+      ${statCard('Kelengkapan Perangkat', persentase + '%', 'fa-clipboard-check', 'linear-gradient(135deg,#7b3aff,#f04438)')}
+    </div>
+    <div class="glass card-section">
+      <div class="section-title mb-3"><i class="fa-solid fa-clipboard-check me-1"></i> Kelengkapan Perangkat Ajar Saya</div>
+      <div class="progress mb-2"><div class="progress-bar" style="width:${persentase}%; background:${persentase>=80?'var(--success)':persentase>=50?'var(--warn)':'var(--danger)'}"></div></div>
+      <div class="section-sub small">${jenisTerisi.length}/${jenisWajib.length} jenis dokumen wajib sudah terupload</div>
+    </div>
+    <div class="glass card-section mt-3">
+      <div class="section-title mb-3"><i class="fa-solid fa-book-open me-1"></i> Agenda Mengajar Terbaru</div>
+      ${agendaRows}
     </div>`;
 }
 function statCard(label, val, icon, grad) {
@@ -572,11 +625,14 @@ async function renderGenericTable(table, columns) {
 
 function openForm(table, columns, existing) {
   const isEdit = !!existing;
-  const fields = columns.map(c => `
+  const fields = columns.map(c => {
+    const inputType = c.key === 'tanggal' ? 'date' : 'text';
+    return `
     <div class="mb-2">
       <label class="form-label small fw-semibold">${c.label}</label>
-      <input type="text" class="form-control form-control-sm" id="f_${c.key}" value="${isEdit ? (existing[c.key] ?? '') : ''}">
-    </div>`).join('');
+      <input type="${inputType}" class="form-control form-control-sm" id="f_${c.key}" value="${isEdit ? (existing[c.key] ?? '') : ''}">
+    </div>`;
+  }).join('');
 
   const modalHtml = `
   <div class="modal fade" id="dynModal" tabindex="-1">
@@ -754,9 +810,9 @@ async function simpanNilaiCepat() {
 
 function printLeger() {
   if (!window._legerData) { showToast('Tampilkan leger terlebih dahulu.', 'warning'); return; }
-  printWithHeader('Leger Nilai', () => {
+  printWithHeader('Leger Nilai', async () => {
     const doc = new jspdf.jsPDF();
-    addKopSurat(doc, 'LEGER NILAI SISWA');
+    await addKopSurat(doc, 'LEGER NILAI SISWA');
     const kolom = window._legerData.kolomPenilaian;
     const head = [['NIS', 'Nama', ...kolom, 'Rata-Rata']];
     const body = window._legerData.leger.map(r => [r.nis, r.nama, ...kolom.map(k => r.nilai[k] ?? '-'), r.rataRata]);
@@ -913,8 +969,222 @@ async function renderRekapWali() {
 }
 
 /*************************************************************
- * ADMIN: MANAJEMEN USER
+ * ADMIN: MANAJEMEN DATA SISWA
  *************************************************************/
+async function renderManajemenSiswa() {
+  const kelasList = getData('Kelas');
+  const rows = getData('DataSiswa');
+  const kelasNama = id => (kelasList.find(k => k.id === id) || {}).namaKelas || id || '-';
+
+  const tbody = rows.map(s => `<tr>
+    <td>${s.nis || '-'}</td><td>${s.nisn || '-'}</td><td>${s.nama || '-'}</td><td>${s.jenisKelamin || '-'}</td>
+    <td>${kelasNama(s.kelasId)}</td>
+    <td><span class="chip" style="background:${s.status==='Aktif'?'#12b76a20':'#f0443820'}; color:${s.status==='Aktif'?'#12b76a':'#f04438'}">${s.status || 'Aktif'}</span></td>
+    <td class="text-end">
+      <button class="btn btn-sm btn-soft" onclick='openFormSiswa(${JSON.stringify(s).replace(/'/g,"&#39;")})'><i class="fa-solid fa-pen"></i></button>
+      <button class="btn btn-sm btn-soft text-danger" onclick="deleteRow('DataSiswa','${s.id}')"><i class="fa-solid fa-trash"></i></button>
+    </td></tr>`).join('') || `<tr><td colspan="7" class="text-center section-sub py-4">Belum ada data siswa.</td></tr>`;
+
+  document.getElementById('pageContent').innerHTML = `
+    <div class="glass card-section">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="section-title">Data Siswa</div>
+        <button class="btn btn-accent btn-sm" onclick="openFormSiswa(null)"><i class="fa-solid fa-plus me-1"></i>Tambah Siswa</button>
+      </div>
+      <div class="table-responsive"><table class="table table-sm align-middle">
+        <thead><tr><th>NIS</th><th>NISN</th><th>Nama</th><th>JK</th><th>Kelas</th><th>Status</th><th></th></tr></thead>
+        <tbody>${tbody}</tbody>
+      </table></div>
+    </div>`;
+  window._kelasListForSiswa = kelasList;
+}
+
+function openFormSiswa(existing) {
+  const isEdit = !!existing;
+  const kelasOptions = (window._kelasListForSiswa || getData('Kelas')).map(k =>
+    `<option value="${k.id}" ${isEdit && existing.kelasId === k.id ? 'selected' : ''}>${k.namaKelas}</option>`).join('');
+
+  const modalHtml = `<div class="modal fade" id="siswaModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content glass">
+    <div class="modal-header"><h6 class="modal-title">${isEdit ? 'Edit' : 'Tambah'} Data Siswa</h6><button class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+      <label class="form-label small fw-semibold">NIS</label>
+      <input class="form-control form-control-sm mb-2" id="siNis" value="${isEdit ? (existing.nis||'') : ''}">
+      <label class="form-label small fw-semibold">NISN</label>
+      <input class="form-control form-control-sm mb-2" id="siNisn" value="${isEdit ? (existing.nisn||'') : ''}">
+      <label class="form-label small fw-semibold">Nama Lengkap</label>
+      <input class="form-control form-control-sm mb-2" id="siNama" value="${isEdit ? (existing.nama||'') : ''}">
+      <label class="form-label small fw-semibold">Jenis Kelamin</label>
+      <select class="form-select form-select-sm mb-2" id="siJk">
+        <option value="L" ${isEdit && existing.jenisKelamin==='L'?'selected':''}>Laki-laki</option>
+        <option value="P" ${isEdit && existing.jenisKelamin==='P'?'selected':''}>Perempuan</option>
+      </select>
+      <label class="form-label small fw-semibold">Kelas</label>
+      <select class="form-select form-select-sm mb-2" id="siKelas">${kelasOptions}</select>
+      <label class="form-label small fw-semibold">Status</label>
+      <select class="form-select form-select-sm" id="siStatus">
+        <option value="Aktif" ${isEdit && existing.status==='Aktif'?'selected':''}>Aktif</option>
+        <option value="Nonaktif" ${isEdit && existing.status==='Nonaktif'?'selected':''}>Nonaktif</option>
+      </select>
+    </div>
+    <div class="modal-footer"><button class="btn btn-accent btn-sm" onclick='submitFormSiswa(${isEdit ? `"${existing.id}"` : 'null'})'>Simpan</button></div>
+  </div></div></div>`;
+  document.getElementById('siswaModalHolder')?.remove();
+  const holder = document.createElement('div'); holder.id = 'siswaModalHolder'; holder.innerHTML = modalHtml;
+  document.body.appendChild(holder);
+  new bootstrap.Modal(document.getElementById('siswaModal')).show();
+}
+async function submitFormSiswa(id) {
+  const data = {
+    nis: document.getElementById('siNis').value, nisn: document.getElementById('siNisn').value,
+    nama: document.getElementById('siNama').value, jenisKelamin: document.getElementById('siJk').value,
+    kelasId: document.getElementById('siKelas').value, status: document.getElementById('siStatus').value
+  };
+  if (id) data.id = id;
+  bootstrap.Modal.getInstance(document.getElementById('siswaModal')).hide();
+  await writeData(id ? 'update' : 'create', 'DataSiswa', data, id);
+  showToast('Data siswa tersimpan.', 'success');
+  renderManajemenSiswa();
+}
+
+/*************************************************************
+ * ADMIN: MANAJEMEN DATA GURU
+ *************************************************************/
+async function renderManajemenGuru() {
+  const rows = getData('Users', u => u.role === 'Guru');
+  const tbody = rows.map(g => `<tr>
+    <td>${g.nama || '-'}</td><td>${g.nip || '-'}</td><td>${g.username || '-'}</td><td>${g.noHp || '-'}</td>
+    <td><span class="chip" style="background:${g.status==='Aktif'?'#12b76a20':'#f0443820'}; color:${g.status==='Aktif'?'#12b76a':'#f04438'}">${g.status || 'Aktif'}</span></td>
+    <td class="text-end">
+      <button class="btn btn-sm btn-soft" onclick='openFormGuru(${JSON.stringify(g).replace(/'/g,"&#39;")})'><i class="fa-solid fa-pen"></i></button>
+      <button class="btn btn-sm btn-soft" onclick="resetPasswordUser('${g.id}')"><i class="fa-solid fa-key"></i></button>
+      <button class="btn btn-sm btn-soft text-danger" onclick="deleteRow('Users','${g.id}')"><i class="fa-solid fa-trash"></i></button>
+    </td></tr>`).join('') || `<tr><td colspan="6" class="text-center section-sub py-4">Belum ada data guru.</td></tr>`;
+
+  document.getElementById('pageContent').innerHTML = `
+    <div class="glass card-section">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="section-title">Data Guru</div>
+        <button class="btn btn-accent btn-sm" onclick="openFormGuru(null)"><i class="fa-solid fa-user-plus me-1"></i>Tambah Guru</button>
+      </div>
+      <div class="table-responsive"><table class="table table-sm align-middle">
+        <thead><tr><th>Nama</th><th>NIP</th><th>Username</th><th>No HP</th><th>Status</th><th></th></tr></thead>
+        <tbody>${tbody}</tbody>
+      </table></div>
+    </div>`;
+}
+
+function openFormGuru(existing) {
+  const isEdit = !!existing;
+  const modalHtml = `<div class="modal fade" id="guruModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content glass">
+    <div class="modal-header"><h6 class="modal-title">${isEdit ? 'Edit' : 'Tambah'} Data Guru</h6><button class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+      <label class="form-label small fw-semibold">Nama Lengkap</label>
+      <input class="form-control form-control-sm mb-2" id="guNama" value="${isEdit ? (existing.nama||'') : ''}">
+      <label class="form-label small fw-semibold">NIP</label>
+      <input class="form-control form-control-sm mb-2" id="guNip" value="${isEdit ? (existing.nip||'') : ''}">
+      <label class="form-label small fw-semibold">No HP</label>
+      <input class="form-control form-control-sm mb-2" id="guNoHp" value="${isEdit ? (existing.noHp||'') : ''}">
+      <label class="form-label small fw-semibold">Username</label>
+      <input class="form-control form-control-sm mb-2" id="guUsername" value="${isEdit ? (existing.username||'') : ''}" ${isEdit ? 'disabled' : ''}>
+      ${!isEdit ? `<label class="form-label small fw-semibold">Password</label>
+      <input type="password" class="form-control form-control-sm mb-2" id="guPassword">` : ''}
+      <label class="form-label small fw-semibold">Status</label>
+      <select class="form-select form-select-sm" id="guStatus">
+        <option value="Aktif" ${isEdit && existing.status==='Aktif'?'selected':''}>Aktif</option>
+        <option value="Nonaktif" ${isEdit && existing.status==='Nonaktif'?'selected':''}>Nonaktif</option>
+      </select>
+    </div>
+    <div class="modal-footer"><button class="btn btn-accent btn-sm" onclick='submitFormGuru(${isEdit ? `"${existing.id}"` : 'null'})'>Simpan</button></div>
+  </div></div></div>`;
+  document.getElementById('guruModalHolder')?.remove();
+  const holder = document.createElement('div'); holder.id = 'guruModalHolder'; holder.innerHTML = modalHtml;
+  document.body.appendChild(holder);
+  new bootstrap.Modal(document.getElementById('guruModal')).show();
+}
+async function submitFormGuru(id) {
+  bootstrap.Modal.getInstance(document.getElementById('guruModal')).hide();
+  if (id) {
+    const data = { id, nama: document.getElementById('guNama').value, nip: document.getElementById('guNip').value,
+      noHp: document.getElementById('guNoHp').value, status: document.getElementById('guStatus').value };
+    await writeData('update', 'Users', data, id);
+    showToast('Data guru tersimpan.', 'success');
+  } else {
+    const data = { nama: document.getElementById('guNama').value, nip: document.getElementById('guNip').value,
+      noHp: document.getElementById('guNoHp').value, username: document.getElementById('guUsername').value,
+      password: document.getElementById('guPassword').value, role: 'Guru', status: document.getElementById('guStatus').value };
+    const res = await apiCall('manageUser', { sub: 'add', data });
+    if (!res.success) return;
+    showToast('Guru ditambahkan.', 'success');
+  }
+  renderManajemenGuru();
+}
+
+/*************************************************************
+ * PROFIL SAYA (foto, data diri, password)
+ *************************************************************/
+async function renderProfil() {
+  const u = STATE.user;
+  document.getElementById('pageContent').innerHTML = `
+    <div class="glass card-section" style="max-width:520px;">
+      <div class="section-title mb-3">Profil Saya</div>
+      <div class="text-center mb-3">
+        <img id="profilFotoPreview" src="${u.fotoUrl || 'https://placehold.co/100x100?text=Foto'}" class="rounded-circle mb-2" style="width:100px;height:100px;object-fit:cover;border:2px solid #fff;">
+        <div><input type="file" id="profilFoto" accept="image/*" class="form-control form-control-sm" onchange="previewProfilFoto()"></div>
+      </div>
+      <label class="form-label small fw-semibold">Nama</label>
+      <input class="form-control form-control-sm mb-2" id="profilNama" value="${u.nama || ''}">
+      <label class="form-label small fw-semibold">No HP</label>
+      <input class="form-control form-control-sm mb-2" id="profilNoHp" value="${u.noHp || ''}">
+      <label class="form-label small fw-semibold">NIP</label>
+      <input class="form-control form-control-sm mb-3" id="profilNip" value="${u.nip || ''}">
+      <hr>
+      <label class="form-label small fw-semibold">Password Baru <span class="section-sub">(kosongkan jika tidak diubah)</span></label>
+      <input type="password" class="form-control form-control-sm mb-2" id="profilPasswordBaru">
+      <label class="form-label small fw-semibold">Konfirmasi Password Baru</label>
+      <input type="password" class="form-control form-control-sm mb-3" id="profilPasswordKonfirmasi">
+      <button class="btn btn-accent btn-sm" onclick="simpanProfil()"><i class="fa-solid fa-save me-1"></i>Simpan Perubahan</button>
+    </div>`;
+}
+function previewProfilFoto() {
+  const file = document.getElementById('profilFoto').files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => { document.getElementById('profilFotoPreview').src = e.target.result; };
+  reader.readAsDataURL(file);
+}
+async function simpanProfil() {
+  const pwBaru = document.getElementById('profilPasswordBaru').value;
+  const pwKonfirmasi = document.getElementById('profilPasswordKonfirmasi').value;
+  if (pwBaru && pwBaru !== pwKonfirmasi) { showToast('Konfirmasi password tidak cocok.', 'danger'); return; }
+
+  const data = {
+    id: STATE.user.id,
+    nama: document.getElementById('profilNama').value,
+    noHp: document.getElementById('profilNoHp').value,
+    nip: document.getElementById('profilNip').value
+  };
+  if (pwBaru) data.password = pwBaru;
+
+  const file = document.getElementById('profilFoto').files[0];
+  let res;
+  if (file) {
+    const base64 = await fileToBase64(file);
+    res = await apiCall('uploadFile', { table: 'Users', fileData: base64, fileName: file.name, mimeType: file.type, fileField: 'fotoUrl', data });
+  } else {
+    res = await apiCall('update', { table: 'Users', data });
+  }
+  if (res.success) {
+    Object.assign(STATE.user, data);
+    if (res.fotoUrl) STATE.user.fotoUrl = res.fotoUrl;
+    delete STATE.user.password;
+    localStorage.setItem('sag_user', JSON.stringify(STATE.user));
+    document.getElementById('topUserName').textContent = STATE.user.nama;
+    if (STATE.user.fotoUrl) document.getElementById('topAvatar').src = STATE.user.fotoUrl;
+    showToast('Profil berhasil diperbarui.', 'success');
+  }
+}
+
+
 async function renderUserManagement() {
   const rows = getData('Users').map(u => `<tr>
     <td>${u.nama}</td><td>${u.username}</td><td>${u.role}</td><td><span class="chip" style="background:${u.status==='Aktif'?'#12b76a20':'#f0443820'}; color:${u.status==='Aktif'?'#12b76a':'#f04438'}">${u.status}</span></td>
@@ -1027,7 +1297,7 @@ async function simpanKonfigurasi() {
 
   // 1x request untuk semua field (sebelumnya 8x request berurutan -> lambat)
   const res = await apiCall('bulkUpdateConfig', { data });
-  if (res.success) { showToast('Konfigurasi disimpan.', 'success'); await loadConfig(); }
+  if (res.success) { showToast('Konfigurasi disimpan.', 'success'); STATE._logoBase64 = undefined; await loadConfig(); }
 }
 
 /*************************************************************
@@ -1063,9 +1333,9 @@ async function setStatusPerangkat(id, status) {
   if (res.success) { showToast('Status diperbarui.', 'success'); renderMonitoringPerangkat(); }
 }
 function printLembarKontrol() {
-  printWithHeader('Lembar Kontrol', () => {
+  printWithHeader('Lembar Kontrol', async () => {
     const doc = new jspdf.jsPDF();
-    addKopSurat(doc, 'LEMBAR KONTROL KELENGKAPAN ADMINISTRASI GURU');
+    await addKopSurat(doc, 'LEMBAR KONTROL KELENGKAPAN ADMINISTRASI GURU');
     const body = (window._monitoringData||[]).map(p => [p.guruNama, p.jenis, p.status, p.catatanRevisi||'-']);
     doc.autoTable({ head: [['Guru','Jenis Dokumen','Status','Catatan']], body, startY: 55 });
     addTandaTanganDanBarcode(doc, 'LK-' + Date.now());
@@ -1076,16 +1346,44 @@ function printLembarKontrol() {
 /*************************************************************
  * PDF UTILITIES (KOP SURAT, TTD, BARCODE)
  *************************************************************/
-function printWithHeader(label, fn) {
-  try { fn(); } catch (err) { showToast('Gagal membuat PDF: ' + err.message, 'danger'); }
+async function printWithHeader(label, fn) {
+  try { await fn(); } catch (err) { showToast('Gagal membuat PDF: ' + err.message, 'danger'); }
 }
-function addKopSurat(doc, judul) {
+// Ambil logo sekolah sebagai base64 (dicache di STATE._logoBase64), supaya bisa dipasang di kop PDF.
+// Reset cache ini (STATE._logoBase64 = undefined) setiap kali logoUrl di Konfigurasi Sekolah diubah.
+async function getLogoBase64() {
   const cfg = STATE.config;
+  if (!cfg.logoUrl) return null;
+  if (STATE._logoBase64 !== undefined) return STATE._logoBase64;
+  try {
+    const res = await fetch(cfg.logoUrl);
+    const blob = await res.blob();
+    STATE._logoBase64 = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  } catch (e) {
+    STATE._logoBase64 = null; // gagal ambil logo (mis. CORS), lanjut tanpa logo
+  }
+  return STATE._logoBase64;
+}
+async function addKopSurat(doc, judul) {
+  const cfg = STATE.config;
+  const logoData = await getLogoBase64();
+
+  // Logo di kiri (jika berhasil dimuat)
+  if (logoData) {
+    try { doc.addImage(logoData, 14, 10, 22, 22); } catch (e) { /* format logo tidak didukung, abaikan */ }
+  }
+
+  // Teks kop surat rata tengah (seperti kop resmi pada umumnya)
   doc.setFontSize(13); doc.setFont(undefined, 'bold');
-  doc.text(cfg.namaSekolah || 'Nama Sekolah', 40, 18);
+  doc.text(cfg.namaSekolah || 'Nama Sekolah', 105, 16, { align: 'center' });
   doc.setFontSize(9); doc.setFont(undefined, 'normal');
-  doc.text(cfg.alamatSekolah || '-', 40, 24);
-  doc.text('NPSN: ' + (cfg.npsn || '-'), 40, 29);
+  doc.text(cfg.alamatSekolah || '-', 105, 22, { align: 'center' });
+  doc.text('NPSN: ' + (cfg.npsn || '-'), 105, 27, { align: 'center' });
   doc.setLineWidth(0.8); doc.line(14, 34, 196, 34);
 
   doc.setFontSize(12); doc.setFont(undefined, 'bold'); doc.text(judul, 105, 44, { align: 'center' });
@@ -1116,9 +1414,9 @@ function addTandaTanganDanBarcode(doc, code) {
  *************************************************************/
 async function printAgenda() {
   const rows = getData('Agenda', a => a.guruId === STATE.user.id);
-  printWithHeader('Jurnal Agenda', () => {
+  printWithHeader('Jurnal Agenda', async () => {
     const doc = new jspdf.jsPDF();
-    addKopSurat(doc, 'JURNAL AGENDA MENGAJAR');
+    await addKopSurat(doc, 'JURNAL AGENDA MENGAJAR');
     const body = rows.map(a => [a.tanggal, a.kelasId, a.mapelId, a.materi, a.kegiatan]);
     doc.autoTable({ head: [['Tanggal','Kelas','Mapel','Materi','Kegiatan']], body, startY: 55, styles:{fontSize:8} });
     addTandaTanganDanBarcode(doc, 'AGD-' + Date.now());
