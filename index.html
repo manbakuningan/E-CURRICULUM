@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Sistem Administrasi Guru</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#3a5aff">
@@ -33,6 +33,10 @@ body{
               radial-gradient(1000px 500px at 110% 10%, #ffe6f6 0%, transparent 55%),
               linear-gradient(180deg, var(--platinum-1), var(--platinum-2));
   min-height:100vh;
+  padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  -webkit-text-size-adjust:100%;
+  text-size-adjust:100%;
+  overflow-x:hidden;
 }
 .glass{
   background: var(--glass-bg); backdrop-filter: blur(18px) saturate(160%);
@@ -95,10 +99,66 @@ body{
 .section-sub{ color:var(--muted); font-size:.85rem;}
 
 @media (max-width: 991.98px){
-  .sidebar{ transform: translateX(-100%); }
+  .sidebar{ transform: translateX(-100%); width:240px; }
   .sidebar.show{ transform: translateX(0); }
   .main-wrap{ margin-left:0; padding:14px; }
   .burger{ display:inline-flex; }
+  .section-title{ font-size:1rem; }
+  .stat-card{ padding:14px; }
+  .stat-num{ font-size:1.4rem; }
+  .card-section{ padding:14px; }
+  .topbar{ padding:10px 12px; }
+}
+/* Tablet */
+@media (max-width: 767.98px){
+  html{ font-size:15px; }
+  .login-card{ padding:28px 20px; }
+  .nav-link-app{ padding:9px 12px; font-size:.88rem; }
+  .stat-card .icon-badge{ width:40px; height:40px; font-size:1rem; }
+  .stat-num{ font-size:1.25rem; }
+  .row.g-2 > * { padding-left:6px; padding-right:6px; }
+  .form-control, .form-select{ padding:9px 12px; font-size:.9rem; }
+  .btn-sm{ padding:6px 10px; font-size:.82rem; }
+  .modal-dialog{ margin:8px; }
+}
+/* Mobile */
+@media (max-width: 575.98px){
+  html{ font-size:14px; }
+  .main-wrap{ padding:10px; }
+  .topbar{ padding:8px 10px; margin-bottom:12px; }
+  .topbar .d-none.d-sm-block{ display:none !important; }
+  .section-title{ font-size:.95rem; }
+  .section-sub{ font-size:.78rem; }
+  .card-section{ padding:12px; margin-bottom:12px; }
+  .stat-card{ padding:12px; }
+  .stat-num{ font-size:1.15rem; }
+  .stat-card .icon-badge{ width:36px; height:36px; font-size:.95rem; }
+  .glass{ border-radius:14px; }
+  .login-card{ padding:24px 18px; }
+  .login-logo{ width:56px; height:56px; }
+  .table{ font-size:.8rem; }
+  .table thead th{ font-size:.68rem; }
+  .chip{ font-size:.65rem; padding:2px 8px; }
+  .btn{ font-size:.85rem; }
+  .btn-sm{ font-size:.78rem; padding:5px 9px; }
+  .form-control, .form-select{ font-size:.85rem; padding:8px 10px; border-radius:10px; }
+  .form-control-sm, .form-select-sm{ font-size:.8rem; padding:6px 9px; }
+  .modal-dialog{ margin:6px; }
+  .modal-content{ border-radius:14px; }
+  .nav-link-app{ padding:8px 11px; font-size:.84rem; gap:10px; }
+  .nav-link-app i{ width:16px; font-size:.85rem; }
+  .sidebar-brand img{ width:34px; height:34px; }
+  .upload-drop{ padding:16px; }
+  .kal-grid{ min-width:680px; }
+  .kal-cell{ min-height:38px; }
+}
+/* Very small phones */
+@media (max-width: 374.98px){
+  html{ font-size:13px; }
+  .main-wrap{ padding:8px; }
+  .stat-num{ font-size:1.05rem; }
+  .btn-sm{ font-size:.74rem; padding:4px 7px; }
+  .chip{ font-size:.6rem; padding:2px 6px; }
 }
 .spinner-overlay{ position:fixed; inset:0; background:rgba(255,255,255,.55); backdrop-filter:blur(3px); z-index:2000; display:none; align-items:center; justify-content:center;}
 .toast-container{ z-index:3000; }
@@ -129,6 +189,31 @@ body{
 @media (max-width:575.98px){.kal-grid{min-width:680px;}.kal-cell{min-height:38px;}}
 .chip-toggle{cursor:pointer;}
 .mapel-pill{display:inline-block;padding:3px 9px;border-radius:14px;font-size:.7rem;font-weight:600;margin:2px;background:rgba(58,90,255,.12);color:var(--accent);}
+
+/* ===== PERANGKAT AJAR (workflow) ===== */
+.step-badge{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#fff;font-size:.68rem;font-weight:700;margin-right:6px;vertical-align:middle;}
+.perangkat-workflow .upload-drop{padding:18px;}
+.pa-upload-area{margin-top:8px;}
+.perangkat-group{margin-bottom:18px;padding:14px;border-radius:14px;background:rgba(255,255,255,.35);border:1px solid rgba(0,0,0,.05);}
+.perangkat-group-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding-bottom:8px;border-bottom:1px dashed rgba(0,0,0,.08);}
+.perangkat-group-title{font-weight:700;font-size:.95rem;color:var(--ink);}
+.perangkat-group-meta{margin-top:4px;display:flex;flex-wrap:wrap;gap:4px;}
+.perangkat-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;}
+.perangkat-item{padding:10px;border-radius:10px;background:rgba(255,255,255,.55);border:1px solid rgba(0,0,0,.05);display:flex;flex-direction:column;gap:6px;}
+.perangkat-item.perangkat-empty{opacity:.55;background:rgba(255,255,255,.25);}
+.perangkat-head{display:flex;justify-content:space-between;align-items:center;gap:6px;}
+.perangkat-jenis{font-weight:600;font-size:.82rem;}
+.perangkat-file{display:flex;align-items:center;gap:6px;font-size:.74rem;color:var(--muted);word-break:break-all;}
+.perangkat-namafile{word-break:break-all;}
+.perangkat-catatan{font-size:.7rem;color:var(--danger);background:#f0443820;padding:4px 6px;border-radius:6px;}
+.perangkat-actions{display:flex;flex-wrap:wrap;gap:4px;margin-top:auto;}
+.perangkat-actions .btn{flex:1;min-width:60px;font-size:.72rem;padding:4px 6px;}
+@media (max-width:575.98px){
+  .perangkat-list{grid-template-columns:1fr;}
+  .perangkat-group{padding:10px;}
+  .perangkat-group-title{font-size:.88rem;}
+  .step-badge{width:18px;height:18px;font-size:.62rem;}
+}
 </style>
 </head>
 <body>
@@ -1065,31 +1150,11 @@ async function simpanAgenda(id) {
 
 /*************************************************************
  * PERANGKAT AJAR (UPLOAD PDF)
+ * Workflow guru: Pilih Mapel -> Pilih Jenis -> Upload
+ * Riwayat dikelompokkan per mapel. Dokumen disetujui bisa preview & edit.
  *************************************************************/
 const JENIS_PERANGKAT = ['Silabus', 'ATP', 'Prota', 'Promes', 'Modul Ajar/RPP', 'KKTP'];
 
-async function renderPerangkat() {
-  const isGuru = STATE.user.role === 'Guru';
-  const rows = getData('PerangkatAjar', isGuru ? (r => r.guruId === STATE.user.id) : null);
-
-  const cardsHtml = JENIS_PERANGKAT.map(jenis => {
-    const found = rows.find(r => r.jenis === jenis && r.status !== 'Ditolak');
-    const statusChip = found
-      ? `<span class="chip" style="background:${statusColor(found.status)}20; color:${statusColor(found.status)}">${found.status}</span>`
-      : `<span class="chip bg-secondary-subtle text-secondary">Belum Upload</span>`;
-    return `<div class="col-md-4">
-      <div class="glass p-3 h-100">
-        <div class="d-flex justify-content-between align-items-start mb-2">
-          <div class="fw-semibold">${jenis}</div>${statusChip}
-        </div>
-        ${found ? `<a href="${found.fileUrl}" target="_blank" class="small d-block mb-2"><i class="fa-solid fa-file-pdf text-danger me-1"></i>${found.namaFile}</a>
-        ${found.catatanRevisi ? `<div class="small text-danger mb-2"><i class="fa-solid fa-triangle-exclamation me-1"></i>${found.catatanRevisi}</div>` : ''}` : '<p class="section-sub small">Belum ada dokumen.</p>'}
-        <button class="btn btn-soft btn-sm w-100" onclick="openUploadPerangkat('${jenis}')"><i class="fa-solid fa-upload me-1"></i>${found ? 'Upload Ulang' : 'Upload'}</button>
-      </div></div>`;
-  }).join('');
-
-  document.getElementById('pageContent').innerHTML = `<div class="row g-3">${cardsHtml}</div>`;
-}
 function statusColor(status) {
   if (status === 'Disetujui') return '#12b76a';
   if (status === 'Revisi') return '#f79009';
@@ -1097,41 +1162,288 @@ function statusColor(status) {
   return '#6b7385';
 }
 
-function openUploadPerangkat(jenis) {
-  const modalHtml = `
-  <div class="modal fade" id="uploadModal" tabindex="-1">
-    <div class="modal-dialog"><div class="modal-content glass">
-      <div class="modal-header"><h6 class="modal-title">Upload ${jenis}</h6><button class="btn-close" data-bs-dismiss="modal"></button></div>
-      <div class="modal-body">
-        <div class="upload-drop" onclick="document.getElementById('fileInput').click()">
-          <i class="fa-solid fa-cloud-arrow-up fa-2x mb-2" style="color:var(--accent)"></i>
-          <p class="mb-0 small">Klik untuk memilih file PDF</p>
-          <p class="small text-muted mb-0" id="fileNameLabel"></p>
-        </div>
-        <input type="file" id="fileInput" accept="application/pdf" class="d-none" onchange="document.getElementById('fileNameLabel').textContent=this.files[0]?.name || ''">
-      </div>
-      <div class="modal-footer"><button class="btn btn-accent btn-sm" onclick="submitUploadPerangkat('${jenis}')">Upload</button></div>
-    </div></div>
-  </div>`;
-  document.getElementById('uploadModalHolder')?.remove();
-  const holder = document.createElement('div'); holder.id = 'uploadModalHolder'; holder.innerHTML = modalHtml;
-  document.body.appendChild(holder);
-  new bootstrap.Modal(document.getElementById('uploadModal')).show();
+function getGuruMapelList() {
+  const mapelList = getData('Mapel');
+  const userMapelIds = STATE.user.mapelIds
+    ? (Array.isArray(STATE.user.mapelIds) ? STATE.user.mapelIds : String(STATE.user.mapelIds).split(',').map(s=>s.trim()).filter(Boolean))
+    : [];
+  return userMapelIds.length ? mapelList.filter(m => userMapelIds.includes(m.id)) : mapelList;
 }
 
-async function submitUploadPerangkat(jenis) {
-  const file = document.getElementById('fileInput').files[0];
-  if (!file) { showToast('Pilih file terlebih dahulu.', 'warning'); return; }
+async function renderPerangkat() {
+  const isGuru = STATE.user.role === 'Guru';
+
+  // Admin: redirect-style overview (admin validates via "Validasi & Monitoring")
+  if (!isGuru) {
+    const rows = getData('PerangkatAjar');
+    const html = `<div class="glass card-section">
+      <div class="section-title mb-2"><i class="fa-solid fa-file-arrow-up me-1"></i> E-Perangkat Ajar</div>
+      <p class="section-sub small mb-3">Total <strong>${rows.length}</strong> dokumen perangkat ajar terupload. Untuk validasi & monitoring, buka menu <strong>Validasi &amp; Monitoring</strong>.</p>
+      <div class="table-responsive"><table class="table table-sm">
+        <thead><tr><th>Guru</th><th>Mapel</th><th>Jenis</th><th>File</th><th>Status</th></tr></thead>
+        <tbody>${rows.map(p => `<tr>
+          <td>${getGuruNama(p.guruId)}</td>
+          <td>${getMapelNama(p.mapelId)}</td>
+          <td>${p.jenis||'-'}</td>
+          <td>${p.fileUrl ? `<a href="${p.fileUrl}" target="_blank" class="small"><i class="fa-solid fa-file-pdf text-danger me-1"></i>${p.namaFile||'Lihat'}</a>` : '-'}</td>
+          <td><span class="chip" style="background:${statusColor(p.status)}20;color:${statusColor(p.status)}">${p.status||'Menunggu'}</span></td>
+        </tr>`).join('') || '<tr><td colspan="5" class="text-center section-sub py-3">Belum ada dokumen.</td></tr>'}</tbody>
+      </table></div>
+    </div>`;
+    document.getElementById('pageContent').innerHTML = html;
+    return;
+  }
+
+  // ===== GURU MODE =====
+  const mapelList = getGuruMapelList();
+  const allRows = getData('PerangkatAjar', r => r.guruId === STATE.user.id);
+
+  // ===== Step 1: Pilih Mapel =====
+  const mapelOptions = mapelList.length
+    ? mapelList.map(m => `<option value="${m.id}">${m.namaMapel}${m.kodeMapel?' ('+m.kodeMapel+')':''}</option>`).join('')
+    : '<option value="">(Belum ada mapel diampu)</option>';
+
+  // ===== Riwayat dikelompokkan per mapel =====
+  const riwayatHtml = mapelList.length === 0
+    ? '<p class="section-sub small">Anda belum diassign mapel. Hubungi admin.</p>'
+    : mapelList.map(m => {
+        const dokumen = allRows.filter(r => r.mapelId === m.id);
+        const dokumenCards = JENIS_PERANGKAT.map(jenis => {
+          const found = dokumen.find(r => r.jenis === jenis && r.status !== 'Ditolak');
+          if (!found) {
+            return `<div class="perangkat-item perangkat-empty">
+              <div class="perangkat-jenis"><i class="fa-regular fa-file me-1"></i>${jenis}</div>
+              <span class="chip bg-secondary-subtle text-secondary">Belum upload</span>
+            </div>`;
+          }
+          const canPreview = found.status === 'Disetujui' && found.fileUrl;
+          const color = statusColor(found.status);
+          const catatanRev = found.catatanRevisi
+            ? `<div class="perangkat-catatan"><i class="fa-solid fa-triangle-exclamation me-1"></i>${found.catatanRevisi}</div>` : '';
+          return `<div class="perangkat-item" data-id="${found.id}">
+            <div class="perangkat-head">
+              <div class="perangkat-jenis"><i class="fa-solid fa-file-lines me-1"></i>${jenis}</div>
+              <span class="chip" style="background:${color}20;color:${color}">${found.status || 'Menunggu'}</span>
+            </div>
+            <div class="perangkat-file">
+              <i class="fa-solid fa-file-pdf text-danger"></i>
+              <span class="perangkat-namafile">${found.namaFile || 'dokumen.pdf'}</span>
+            </div>
+            ${catatanRev}
+            <div class="perangkat-actions">
+              ${canPreview ? `<button class="btn btn-soft btn-sm" onclick="previewPerangkat('${found.id}')" title="Lihat preview"><i class="fa-solid fa-eye me-1"></i>Preview</button>` : ''}
+              <button class="btn btn-soft btn-sm" onclick="openEditPerangkat('${found.id}')" title="Edit detail"><i class="fa-solid fa-pen me-1"></i>Edit</button>
+              <button class="btn btn-soft btn-sm text-danger" onclick="hapusPerangkat('${found.id}')" title="Hapus dokumen"><i class="fa-solid fa-trash me-1"></i>Hapus</button>
+            </div>
+          </div>`;
+        }).join('');
+        const counts = {
+          total: dokumen.length,
+          disetujui: dokumen.filter(d => d.status === 'Disetujui').length,
+          revisi: dokumen.filter(d => d.status === 'Revisi').length,
+          menunggu: dokumen.filter(d => !d.status || d.status === 'Menunggu').length
+        };
+        return `<div class="perangkat-group">
+          <div class="perangkat-group-head">
+            <div>
+              <div class="perangkat-group-title"><i class="fa-solid fa-book-open-reader me-1"></i> ${m.namaMapel}${m.kodeMapel?' <span class="section-sub">('+m.kodeMapel+')</span>':''}</div>
+              <div class="perangkat-group-meta">
+                <span class="chip" style="background:#3a5aff20;color:#3a5aff">${counts.total} dokumen</span>
+                ${counts.disetujui?`<span class="chip" style="background:#12b76a20;color:#12b76a">${counts.disetujui} disetujui</span>`:''}
+                ${counts.revisi?`<span class="chip" style="background:#f7900920;color:#f79009">${counts.revisi} revisi</span>`:''}
+                ${counts.menunggu?`<span class="chip bg-secondary-subtle text-secondary">${counts.menunggu} menunggu</span>`:''}
+              </div>
+            </div>
+          </div>
+          <div class="perangkat-list">${dokumenCards}</div>
+        </div>`;
+      }).join('');
+
+  document.getElementById('pageContent').innerHTML = `
+    <div class="perangkat-workflow glass card-section">
+      <div class="section-title mb-1"><i class="fa-solid fa-file-arrow-up me-1"></i> Upload Perangkat Ajar</i></div>
+      <p class="section-sub small mb-3">Pilih mapel yang Anda ampu, lalu pilih jenis perangkat ajar, kemudian unggah dokumen PDF.</p>
+      <div class="row g-2 mb-2">
+        <div class="col-md-6">
+          <label class="form-label small fw-semibold"><span class="step-badge">1</span> Pilih Mapel</label>
+          <select class="form-select form-select-sm" id="paMapel" onchange="renderPerangkatJenisOptions()">${mapelOptions}</select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label small fw-semibold"><span class="step-badge">2</span> Pilih Jenis Perangkat Ajar</label>
+          <select class="form-select form-select-sm" id="paJenis" onchange="updatePaUploadButton()">
+            <option value="">- Pilih mapel dahulu -</option>
+          </select>
+        </div>
+      </div>
+      <div class="pa-upload-area" id="paUploadArea">
+        <div class="upload-drop" onclick="openPaFilePicker()">
+          <i class="fa-solid fa-cloud-arrow-up fa-2x mb-2" style="color:var(--accent)"></i>
+          <p class="mb-0 small"><span class="step-badge">3</span> Klik untuk memilih file PDF</p>
+          <p class="small text-muted mb-0" id="paFileNameLabel">Belum ada file dipilih</p>
+        </div>
+        <input type="file" id="paFileInput" accept="application/pdf" class="d-none" onchange="document.getElementById('paFileNameLabel').textContent=this.files[0]?.name || 'Belum ada file dipilih'; updatePaUploadButton();">
+        <button class="btn btn-accent btn-sm mt-2 w-100" id="paUploadBtn" onclick="submitUploadPerangkatV2()" disabled><i class="fa-solid fa-upload me-1"></i>Upload Dokumen</button>
+      </div>
+    </div>
+
+    <div class="glass card-section">
+      <div class="section-title mb-1"><i class="fa-solid fa-folder-tree me-1"></i> Riwayat Perangkat Ajar per Mapel</div>
+      <p class="section-sub small mb-3">Dokumen yang sudah disetujui admin dapat dipreview dan diedit.</p>
+      <div id="riwayatPerangkat">${riwayatHtml}</div>
+    </div>`;
+}
+
+function renderPerangkatJenisOptions() {
+  const mapelId = document.getElementById('paMapel').value;
+  const jenisSel = document.getElementById('paJenis');
+  if (!mapelId) {
+    jenisSel.innerHTML = '<option value="">- Pilih mapel dahulu -</option>';
+  } else {
+    jenisSel.innerHTML = '<option value="">- Pilih jenis -</option>' +
+      JENIS_PERANGKAT.map(j => `<option value="${j}">${j}</option>`).join('');
+  }
+  updatePaUploadButton();
+}
+
+function updatePaUploadButton() {
+  const mapelId = document.getElementById('paMapel')?.value;
+  const jenis = document.getElementById('paJenis')?.value;
+  const file = document.getElementById('paFileInput')?.files[0];
+  const btn = document.getElementById('paUploadBtn');
+  if (!btn) return;
+  btn.disabled = !(mapelId && jenis && file);
+}
+
+function openPaFilePicker() {
+  document.getElementById('paFileInput').click();
+}
+
+async function submitUploadPerangkatV2() {
+  const mapelId = document.getElementById('paMapel').value;
+  const jenis = document.getElementById('paJenis').value;
+  const file = document.getElementById('paFileInput').files[0];
+  if (!mapelId || !jenis || !file) { showToast('Lengkapi mapel, jenis, dan file.', 'warning'); return; }
   const base64 = await fileToBase64(file);
   const res = await apiCall('uploadFile', {
     table: 'PerangkatAjar', fileData: base64, fileName: file.name, mimeType: file.type,
-    data: { guruId: STATE.user.id, jenis, tapel: STATE.config.tapelAktif || '' }
+    data: {
+      guruId: STATE.user.id,
+      mapelId,
+      jenis,
+      tapel: STATE.config.tapelAktif || '',
+      status: 'Menunggu'
+    }
   });
   if (res.success) {
-    showToast('Berhasil diupload.', 'success');
-    bootstrap.Modal.getInstance(document.getElementById('uploadModal')).hide();
+    showToast('Dokumen berhasil diupload, menunggu validasi admin.', 'success');
     renderPerangkat();
   }
+}
+
+function previewPerangkat(id) {
+  const p = getData('PerangkatAjar').find(r => r.id === id);
+  if (!p || !p.fileUrl) { showToast('Dokumen tidak tersedia untuk preview.', 'warning'); return; }
+  const modalHtml = `<div class="modal fade" id="previewModal" tabindex="-1">
+    <div class="modal-dialog modal-xl"><div class="modal-content glass">
+      <div class="modal-header">
+        <h6 class="modal-title"><i class="fa-solid fa-file-pdf text-danger me-1"></i>${p.namaFile || 'Preview'}</h6>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body p-0">
+        <iframe src="${p.fileUrl}" style="width:100%;height:70vh;border:0;border-radius:0 0 14px 14px;background:#fff;" title="Preview ${p.jenis}"></iframe>
+      </div>
+      <div class="modal-footer">
+        <a href="${p.fileUrl}" target="_blank" class="btn btn-soft btn-sm"><i class="fa-solid fa-up-right-from-square me-1"></i>Buka tab baru</a>
+        <button class="btn btn-accent btn-sm" data-bs-dismiss="modal">Tutup</button>
+      </div>
+    </div></div>
+  </div>`;
+  document.getElementById('previewModalHolder')?.remove();
+  const holder = document.createElement('div'); holder.id = 'previewModalHolder'; holder.innerHTML = modalHtml;
+  document.body.appendChild(holder);
+  new bootstrap.Modal(document.getElementById('previewModal')).show();
+}
+
+function openEditPerangkat(id) {
+  const p = getData('PerangkatAjar').find(r => r.id === id);
+  if (!p) return;
+  const mapelList = getGuruMapelList();
+  const mapelOptions = mapelList.map(m => `<option value="${m.id}" ${p.mapelId===m.id?'selected':''}>${m.namaMapel}${m.kodeMapel?' ('+m.kodeMapel+')':''}</option>`).join('');
+  const jenisOptions = JENIS_PERANGKAT.map(j => `<option value="${j}" ${p.jenis===j?'selected':''}>${j}</option>`).join('');
+  const modalHtml = `<div class="modal fade" id="editPerangkatModal" tabindex="-1">
+    <div class="modal-dialog"><div class="modal-content glass">
+      <div class="modal-header"><h6 class="modal-title"><i class="fa-solid fa-pen me-1"></i> Edit Dokumen Perangkat Ajar</h6>
+        <button class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body">
+        <div class="mb-2"><label class="form-label small fw-semibold">Mapel</label>
+          <select class="form-select form-select-sm" id="epMapel">${mapelOptions}</select></div>
+        <div class="mb-2"><label class="form-label small fw-semibold">Jenis Perangkat</label>
+          <select class="form-select form-select-sm" id="epJenis">${jenisOptions}</select></div>
+        <div class="mb-2"><label class="form-label small fw-semibold">Nama File</label>
+          <input class="form-control form-control-sm" id="epNamaFile" value="${(p.namaFile||'').replace(/"/g,'&quot;')}"></div>
+        <div class="mb-2"><label class="form-label small fw-semibold">Catatan Guru (opsional)</label>
+          <textarea class="form-control form-control-sm" id="epCatatan" rows="2" placeholder="Catatan untuk admin validator...">${(p.catatanGuru||'')}</textarea></div>
+        ${p.status === 'Disetujui'
+          ? '<div class="alert alert-warning small py-2"><i class="fa-solid fa-triangle-exclamation me-1"></i>Dokumen ini sudah disetujui. Jika Anda mengubah detail, status akan kembali menjadi "Menunggu" untuk validasi ulang.</div>'
+          : ''}
+        <hr>
+        <div class="small"><strong>File saat ini:</strong> <i class="fa-solid fa-file-pdf text-danger"></i> ${p.namaFile || '-'}</div>
+        <div class="mt-2"><label class="form-label small fw-semibold">Ganti File PDF (opsional)</label>
+          <input type="file" class="form-control form-control-sm" id="epFile" accept="application/pdf"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-soft btn-sm text-danger me-auto" onclick="hapusPerangkat('${p.id}');bootstrap.Modal.getInstance(document.getElementById('editPerangkatModal')).hide();"><i class="fa-solid fa-trash me-1"></i>Hapus Dokumen</button>
+        <button class="btn btn-accent btn-sm" onclick="submitEditPerangkat('${p.id}')"><i class="fa-solid fa-save me-1"></i>Simpan</button>
+      </div>
+    </div></div>
+  </div>`;
+  document.getElementById('editPerangkatModalHolder')?.remove();
+  const holder = document.createElement('div'); holder.id = 'editPerangkatModalHolder'; holder.innerHTML = modalHtml;
+  document.body.appendChild(holder);
+  new bootstrap.Modal(document.getElementById('editPerangkatModal')).show();
+}
+
+async function submitEditPerangkat(id) {
+  const p = getData('PerangkatAjar').find(r => r.id === id);
+  if (!p) return;
+  const file = document.getElementById('epFile').files[0];
+  const data = {
+    id,
+    guruId: STATE.user.id,
+    mapelId: document.getElementById('epMapel').value,
+    jenis: document.getElementById('epJenis').value,
+    namaFile: document.getElementById('epNamaFile').value,
+    catatanGuru: document.getElementById('epCatatan').value,
+    // Jika ada perubahan detail atau file, status kembali ke Menunggu
+    status: (p.status === 'Disetujui' && (file || p.mapelId !== data.mapelId || p.jenis !== data.jenis)) ? 'Menunggu' : p.status
+  };
+  bootstrap.Modal.getInstance(document.getElementById('editPerangkatModal')).hide();
+  let res;
+  if (file) {
+    const base64 = await fileToBase64(file);
+    res = await apiCall('uploadFile', {
+      table: 'PerangkatAjar', fileData: base64, fileName: file.name, mimeType: file.type,
+      data: { ...data, namaFile: file.name }
+    });
+  } else {
+    res = await apiCall('update', { table: 'PerangkatAjar', data });
+  }
+  if (res.success) {
+    // Update local store immediately
+    dbUpsert('PerangkatAjar', { ...p, ...data, namaFile: data.namaFile });
+    showToast('Perubahan tersimpan.', 'success');
+    renderPerangkat();
+  }
+}
+
+async function hapusPerangkat(id) {
+  if (!confirm('Yakin ingin menghapus dokumen ini? Tindakan tidak dapat dibatalkan.')) return;
+  await writeData('delete', 'PerangkatAjar', null, id);
+  showToast('Dokumen dihapus.', 'success');
+  // Tutup modal edit jika terbuka
+  const editModal = document.getElementById('editPerangkatModal');
+  if (editModal) bootstrap.Modal.getInstance(editModal)?.hide();
+  renderPerangkat();
 }
 function fileToBase64(file) {
   return new Promise((resolve, reject) => {
