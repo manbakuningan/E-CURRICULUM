@@ -892,11 +892,12 @@ async function renderKonfigurasi() {
 }
 async function simpanKonfigurasi() {
   const fields = ['namaSekolah','alamatSekolah','npsn','kepsekNama','kepsekNip','logoUrl','tapelAktif','semesterAktif'];
-  for (const f of fields) {
-    await apiCall('update', { table: 'Config', data: { id: f, key: f, value: document.getElementById('cfg_'+f).value } });
-  }
-  showToast('Konfigurasi disimpan.', 'success');
-  await loadConfig();
+  const data = {};
+  fields.forEach(f => data[f] = document.getElementById('cfg_' + f).value);
+
+  // 1x request untuk semua field (sebelumnya 8x request berurutan -> lambat)
+  const res = await apiCall('bulkUpdateConfig', { data });
+  if (res.success) { showToast('Konfigurasi disimpan.', 'success'); await loadConfig(); }
 }
 
 /*************************************************************
