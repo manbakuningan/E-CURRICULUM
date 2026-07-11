@@ -746,10 +746,53 @@ async function processQueue() {
 }
 window.addEventListener('online', processQueue);
 
+// Mapping prefix ID per tabel supaya konsisten & mudah dibaca di sheet.
+const TABLE_ID_PREFIX = {
+  'Users': 'USR',
+  'Kelas': 'KLS',
+  'Mapel': 'MPL',
+  'DataSiswa': 'SIS',
+  'Absensi': 'ABS',
+  'Nilai': 'NIL',
+  'Agenda': 'AGD',
+  'BimbinganWali': 'BIM',
+  'JadwalMengajar': 'JDW',
+  'PerangkatAjar': 'PA',
+  'PanduanMengajar': 'PND',
+  'Config': 'CFG'
+};
+
+// [REV-SYNC2] Generate ID simple & konsisten dengan seedSampleData di Kode.gs.
+// - Mapel: MPL-<kodeMapel> (natural key, mis. MPL-MTK)
+// - Kelas: KLS-<namaKelas> (natural key, mis. KLS-7A)
+// - Lainnya: <PREFIX>-<counter 3-digit> (mis. USR-001, SIS-001, JDW-001)
+// Counter dicari dari data yang sudah ada (max nomor + 1).
+function generateRowId(table, data) {
+  // Natural key untuk Mapel (pakai kodeMapel, pertahankan tanda hubung)
+  if (table === 'Mapel' && data && data.kodeMapel) {
+    const kode = String(data.kodeMapel).toUpperCase().replace(/[^A-Z0-9-]/g, '');
+    if (kode) return 'MPL-' + kode;
+  }
+  // Natural key untuk Kelas (pakai namaKelas)
+  if (table === 'Kelas' && data && data.namaKelas) {
+    const nama = String(data.namaKelas).toUpperCase().replace(/[^A-Z0-9]/g, '');
+    if (nama) return 'KLS-' + nama;
+  }
+  // Counter 3-digit untuk tabel lainnya
+  const prefix = TABLE_ID_PREFIX[table] || table.substring(0, 3).toUpperCase();
+  const existing = dbGet(table);
+  let maxNum = 0;
+  existing.forEach(r => {
+    const m = String(r.id || '').match(new RegExp('^' + prefix + '-(\\d+)$'));
+    if (m) maxNum = Math.max(maxNum, parseInt(m[1]));
+  });
+  return prefix + '-' + String(maxNum + 1).padStart(3, '0');
+}
+
 // Simpan/hapus data: langsung update local store (instan) + kirim ke server (atau antri kalau offline)
 async function writeData(action, table, data, id) {
   if (action === 'create' || action === 'update') {
-    if (!data.id) data.id = id || (table.substring(0,3).toUpperCase() + '-' + Date.now());
+    if (!data.id) data.id = id || generateRowId(table, data);
     dbUpsert(table, data);
   }
   if (action === 'delete') dbDelete(table, id);
@@ -882,8 +925,11 @@ async function renderAbsensi() {
 }
 
 function loadSiswaAbsensi() {
+  // [REV-4] Cari namaKelas dari kelasId yang dipilih, lalu filter siswa by namaKelas
   const kelasId = document.getElementById('absKelas').value;
-  const siswaKelas = window._allSiswa.filter(s => s.kelasId === kelasId);
+  const kelasObj = getData('Kelas').find(k => k.id === kelasId);
+  const kelasNama = kelasObj ? kelasObj.namaKelas : '';
+  const siswaKelas = window._allSiswa.filter(s => s.namaKelas === kelasNama || s.kelasId === kelasId);
   if (!siswaKelas.length) { document.getElementById('absensiList').innerHTML = '<p class="section-sub">Tidak ada siswa di kelas ini.</p>'; return; }
 
   const rows = siswaKelas.map(s => `
@@ -905,7 +951,10 @@ async function simpanAbsensi() {
   const tanggal = document.getElementById('absTanggal').value;
   const jamKe = document.getElementById('absJamKe').value;
   if (!kelasId) { showToast('Pilih kelas terlebih dahulu.', 'warning'); return; }
-  const siswaKelas = window._allSiswa.filter(s => s.kelasId === kelasId);
+  // [REV-5] Filter siswa by namaKelas (DataSiswa sekarang pakai namaKelas, bukan kelasId)
+  const kelasObj = getData('Kelas').find(k => k.id === kelasId);
+  const kelasNama = kelasObj ? kelasObj.namaKelas : '';
+  const siswaKelas = window._allSiswa.filter(s => s.namaKelas === kelasNama || s.kelasId === kelasId);
 
   const rows = siswaKelas.map(s => ({
     id: 'ABS-' + Date.now() + '-' + s.id,
@@ -968,7 +1017,10 @@ async function loadLeger() {
   if (!kelasId || !mapelId) { showToast('Pilih kelas dan mapel terlebih dahulu.', 'warning'); return; }
 
   const res = await apiCall('getLeger', { kelasId, mapelId, semester, tapel });
-  window._legerSiswa = getData('DataSiswa', s => s.kelasId === kelasId);
+  // [REV-5] Filter siswa by namaKelas (DataSiswa sekarang pakai namaKelas, bukan kelasId)
+  const kelasObj = getData('Kelas').find(k => k.id === kelasId);
+  const kelasNama = kelasObj ? kelasObj.namaKelas : '';
+  window._legerSiswa = getData('DataSiswa', s => s.namaKelas === kelasNama || s.kelasId === kelasId);
   window._legerMeta = { kelasId, mapelId, semester, tapel };
 
   if (!res.success) return;
@@ -1531,7 +1583,7 @@ async function renderManajemenSiswa() {
 
   const tbody = rows.map(s => `<tr>
     <td>${s.nis || '-'}</td><td>${s.nisn || '-'}</td><td>${s.nama || '-'}</td><td>${s.jenisKelamin || '-'}</td>
-    <td>${kelasNama(s.kelasId)}</td>
+    <td>${s.namaKelas || kelasNama(s.kelasId) || '-'}</td>
     <td><span class="chip" style="background:${s.status==='Aktif'?'#12b76a20':'#f0443820'}; color:${s.status==='Aktif'?'#12b76a':'#f04438'}">${s.status || 'Aktif'}</span></td>
     <td class="text-end">
       <button class="btn btn-sm btn-soft" onclick='openFormSiswa(${JSON.stringify(s).replace(/'/g,"&#39;")})'><i class="fa-solid fa-pen"></i></button>
@@ -1554,8 +1606,9 @@ async function renderManajemenSiswa() {
 
 function openFormSiswa(existing) {
   const isEdit = !!existing;
+  // [REV-4] value = k.namaKelas (bukan k.id), selected by existing.namaKelas
   const kelasOptions = (window._kelasListForSiswa || getData('Kelas')).map(k =>
-    `<option value="${k.id}" ${isEdit && existing.kelasId === k.id ? 'selected' : ''}>${k.namaKelas}</option>`).join('');
+    `<option value="${k.namaKelas}" ${isEdit && (existing.namaKelas === k.namaKelas || existing.kelasId === k.id) ? 'selected' : ''}>${k.namaKelas}</option>`).join('');
 
   const modalHtml = `<div class="modal fade" id="siswaModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content glass">
     <div class="modal-header"><h6 class="modal-title">${isEdit ? 'Edit' : 'Tambah'} Data Siswa</h6><button class="btn-close" data-bs-dismiss="modal"></button></div>
@@ -1587,10 +1640,11 @@ function openFormSiswa(existing) {
   new bootstrap.Modal(document.getElementById('siswaModal')).show();
 }
 async function submitFormSiswa(id) {
+  // [REV-4] 'kelasId' -> 'namaKelas' (simpan nama kelas langsung)
   const data = {
     nis: document.getElementById('siNis').value, nisn: document.getElementById('siNisn').value,
     nama: document.getElementById('siNama').value, jenisKelamin: document.getElementById('siJk').value,
-    kelasId: document.getElementById('siKelas').value, status: document.getElementById('siStatus').value
+    namaKelas: document.getElementById('siKelas').value, status: document.getElementById('siStatus').value
   };
   if (id) data.id = id;
   bootstrap.Modal.getInstance(document.getElementById('siswaModal')).hide();
@@ -1844,9 +1898,10 @@ async function renderManajemenKelas() {
   const tbody = rows.map(k => {
     const wali = guruList.find(g => g.waliKelasId === k.id);
     const waliNama = wali ? wali.nama : '<span class="section-sub small">Belum ada wali</span>';
-    const jmlSiswa = getData('DataSiswa', s => s.kelasId === k.id && (s.status === 'Aktif' || s.status === '')).length;
+    // [REV-4] filter siswa by namaKelas (bukan kelasId), field 'jenjang' (bukan 'tingkat')
+    const jmlSiswa = getData('DataSiswa', s => s.namaKelas === k.namaKelas && (s.status === 'Aktif' || s.status === '')).length;
     return `<tr>
-    <td>${k.namaKelas || '-'}</td><td>${k.tingkat || '-'}</td><td>${k.tahunAjaran || (STATE.config.tapelAktif||'-')}</td>
+    <td>${k.namaKelas || '-'}</td><td>${k.jenjang || k.tingkat || '-'}</td><td>${k.tahunAjaran || (STATE.config.tapelAktif||'-')}</td>
     <td>${waliNama}</td><td class="text-center">${jmlSiswa}</td>
     <td class="text-end">
       <button class="btn btn-sm btn-soft" onclick='openFormKelas(${JSON.stringify(k).replace(/'/g,"&#39;")})'><i class="fa-solid fa-pen"></i></button>
@@ -1861,7 +1916,7 @@ async function renderManajemenKelas() {
         <button class="btn btn-accent btn-sm" onclick="openFormKelas(null)"><i class="fa-solid fa-plus me-1"></i>Tambah Kelas</button>
       </div>
       <div class="table-responsive"><table class="table table-sm align-middle">
-        <thead><tr><th>Nama Kelas</th><th>Tingkat</th><th>Tahun Ajaran</th><th>Wali Kelas</th><th class="text-center">Jml Siswa</th><th></th></tr></thead>
+        <thead><tr><th>Nama Kelas</th><th>Jenjang</th><th>Tahun Ajaran</th><th>Wali Kelas</th><th class="text-center">Jml Siswa</th><th></th></tr></thead>
         <tbody>${tbody}</tbody>
       </table></div>
       <p class="section-sub small mt-2"><i class="fa-solid fa-circle-info me-1"></i>Wali kelas ditetapkan di menu Manajemen Data Guru. Tandai guru sebagai wali lalu pilih kelas yang diwali.</p>
@@ -1869,14 +1924,15 @@ async function renderManajemenKelas() {
 }
 function openFormKelas(existing) {
   const isEdit = !!existing;
+  // [REV-4] 'tingkat' -> 'jenjang', options: SMP/MTS/SMA/MA/SD/MI
   const modalHtml = `<div class="modal fade" id="kelasModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content glass">
     <div class="modal-header"><h6 class="modal-title">${isEdit ? 'Edit' : 'Tambah'} Data Kelas</h6><button class="btn-close" data-bs-dismiss="modal"></button></div>
     <div class="modal-body">
       <label class="form-label small fw-semibold">Nama Kelas</label>
       <input class="form-control form-control-sm mb-2" id="klNama" placeholder="Contoh: 7A" value="${isEdit ? (existing.namaKelas||'') : ''}">
-      <label class="form-label small fw-semibold">Tingkat</label>
-      <select class="form-select form-select-sm mb-2" id="klTingkat">
-        ${['7','8','9'].map(t => `<option value="${t}" ${isEdit && existing.tingkat===t?'selected':''}>Kelas ${t}</option>`).join('')}
+      <label class="form-label small fw-semibold">Jenjang</label>
+      <select class="form-select form-select-sm mb-2" id="klJenjang">
+        ${['SMP','MTS','SMA','MA','SD','MI'].map(j => `<option value="${j}" ${isEdit && (existing.jenjang||existing.tingkat)===j?'selected':''}>${j}</option>`).join('')}
       </select>
       <label class="form-label small fw-semibold">Tahun Ajaran</label>
       <input class="form-control form-control-sm" id="klTapel" placeholder="Contoh: 2026/2027" value="${isEdit ? (existing.tahunAjaran||'') : (STATE.config.tapelAktif||'')}">
@@ -1889,9 +1945,10 @@ function openFormKelas(existing) {
   new bootstrap.Modal(document.getElementById('kelasModal')).show();
 }
 async function submitFormKelas(id) {
+  // [REV-4] 'tingkat' -> 'jenjang'
   const data = {
     namaKelas: document.getElementById('klNama').value,
-    tingkat: document.getElementById('klTingkat').value,
+    jenjang: document.getElementById('klJenjang').value,
     tahunAjaran: document.getElementById('klTapel').value
   };
   if (id) data.id = id;
@@ -1938,17 +1995,31 @@ async function renderManajemenMapel() {
 }
 function openFormMapel(existing) {
   const isEdit = !!existing;
+  // [REV-4] Saat edit, split kodeMapel "MTK-SMP" kembali ke kode="MTK" dan jenjang="SMP"
+  let editKode = '', editJenjang = 'SMP';
+  if (isEdit && existing.kodeMapel) {
+    const parts = String(existing.kodeMapel).split('-');
+    editKode = parts[0] || '';
+    editJenjang = parts[1] || existing.jenjang || 'SMP';
+  }
   const modalHtml = `<div class="modal fade" id="mapelModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content glass">
     <div class="modal-header"><h6 class="modal-title">${isEdit ? 'Edit' : 'Tambah'} Data Mapel</h6><button class="btn-close" data-bs-dismiss="modal"></button></div>
     <div class="modal-body">
-      <label class="form-label small fw-semibold">Kode Mapel</label>
-      <input class="form-control form-control-sm mb-2" id="mpKode" placeholder="Contoh: MTK7" value="${isEdit ? (existing.kodeMapel||'') : ''}">
+      <div class="row g-2">
+        <div class="col-6">
+          <label class="form-label small fw-semibold">Kode</label>
+          <input class="form-control form-control-sm mb-2" id="mpKode" placeholder="MTK" value="${editKode}">
+        </div>
+        <div class="col-6">
+          <label class="form-label small fw-semibold">Jenjang</label>
+          <select class="form-select form-select-sm mb-2" id="mpJenjang">
+            ${['SMP','MTS','SMA','MA','SD','MI'].map(j => `<option value="${j}" ${editJenjang===j?'selected':''}>${j}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      <div class="alert alert-info small py-1 px-2 mb-2">Kode Mapel otomatis: <strong id="mpKodePreview">${editKode}${editKode?'-':''}${editJenjang}</strong></div>
       <label class="form-label small fw-semibold">Nama Mapel</label>
       <input class="form-control form-control-sm mb-2" id="mpNama" placeholder="Contoh: Matematika" value="${isEdit ? (existing.namaMapel||'') : ''}">
-      <label class="form-label small fw-semibold">Jenjang</label>
-      <select class="form-select form-select-sm mb-2" id="mpJenjang">
-        ${['SMP','MTS','SMA','MA','SD','MI'].map(j => `<option value="${j}" ${isEdit && existing.jenjang===j?'selected':''}>${j}</option>`).join('')}
-      </select>
       <label class="form-label small fw-semibold">KKM</label>
       <input type="number" class="form-control form-control-sm" id="mpKkm" min="0" max="100" placeholder="70" value="${isEdit ? (existing.kkm||'') : ''}">
     </div>
@@ -1957,13 +2028,25 @@ function openFormMapel(existing) {
   document.getElementById('mapelModalHolder')?.remove();
   const holder = document.createElement('div'); holder.id = 'mapelModalHolder'; holder.innerHTML = modalHtml;
   document.body.appendChild(holder);
+  // Live update preview saat kode/jenjang berubah
+  const updatePreview = () => {
+    const k = document.getElementById('mpKode').value.toUpperCase();
+    const j = document.getElementById('mpJenjang').value;
+    document.getElementById('mpKodePreview').textContent = k + (k ? '-' + j : j);
+  };
+  document.getElementById('mpKode').addEventListener('input', updatePreview);
+  document.getElementById('mpJenjang').addEventListener('change', updatePreview);
   new bootstrap.Modal(document.getElementById('mapelModal')).show();
 }
 async function submitFormMapel(id) {
+  // [REV-4] Combine kode + jenjang menjadi kodeMapel = "MTK-SMP"
+  const kode = document.getElementById('mpKode').value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+  const jenjang = document.getElementById('mpJenjang').value;
+  if (!kode) { showToast('Kode mapel wajib diisi.', 'warning'); return; }
   const data = {
-    kodeMapel: document.getElementById('mpKode').value,
+    kodeMapel: kode + '-' + jenjang,  // mis. "MTK-SMP"
     namaMapel: document.getElementById('mpNama').value,
-    jenjang: document.getElementById('mpJenjang').value,
+    jenjang: jenjang,
     kkm: document.getElementById('mpKkm').value
   };
   if (id) data.id = id;
